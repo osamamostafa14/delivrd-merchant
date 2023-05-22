@@ -22,7 +22,7 @@ class BorderButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(width: 2, color: borderColor!),
+          border: Border.all(width: 1, color: borderColor!),
         ),
         child: Center(
           child: Text(btnTxt!,

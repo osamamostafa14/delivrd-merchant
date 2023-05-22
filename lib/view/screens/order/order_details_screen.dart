@@ -1,9 +1,14 @@
 import 'dart:convert';
 import 'package:delivrd_driver/data/model/orders_model.dart';
+import 'package:delivrd_driver/helper/date_converter.dart';
+import 'package:delivrd_driver/provider/appointment_provider.dart';
+import 'package:delivrd_driver/provider/auth_provider.dart';
 import 'package:delivrd_driver/provider/home_provider.dart';
 import 'package:delivrd_driver/provider/splash_provider.dart';
 import 'package:delivrd_driver/utill/dimensions.dart';
 import 'package:delivrd_driver/utill/images.dart';
+import 'package:delivrd_driver/view/base/border_button.dart';
+import 'package:delivrd_driver/view/screens/appointment/calendar_screen.dart';
 import 'package:delivrd_driver/view/screens/widget/image_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +49,19 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           builder: (context, homeProvider, child) {
             Map<String, dynamic> _location = jsonDecode(widget.order!.userLocation);
             Map<String, dynamic> _vehicleInfo = widget.order!.vehicleInfo !=null? jsonDecode(widget.order!.vehicleInfo!) : {'model_name' : 0};
+            DateTime _appointmentDate = DateTime.parse(widget.order!.appointment!.appointmentDate!);
+            final now = DateTime.now();
+            final today = DateTime(now.year, now.month, now.day);
+            final tomorrow = DateTime(now.year, now.month, now.day + 1);
+            String _dateText;
+            if(_appointmentDate == today) {
+             _dateText = 'Today';
+            } else if(_appointmentDate == tomorrow) {
+              _dateText = 'Tomorrow';
+            }else {
+              _dateText = DateConverter.isoStringToLocalDateOnly(_appointmentDate);
+            }
+
             return SafeArea(
               child: Scrollbar(
                 child: SingleChildScrollView(
@@ -54,6 +72,54 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       width: 1170,
                       child: Column(
                         children: [
+                          Row(
+                            children: [
+                             const Expanded(child: Text('Appointment date:', style: TextStyle(color: Colors.black54))),
+                              Expanded(child: Row(
+                                children: [
+                                  Text('${DateConverter.convertTimeToTime(_appointmentDate)}',
+                                      style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13
+                                      )),
+                                  const SizedBox(width: 10),
+                                  Text(_dateText,
+                                      style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.normal,
+                                        fontStyle: FontStyle.italic,
+                                        fontSize: 12
+                                      )),
+                                ],
+                              )),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          BorderButton(
+                            width: 350,
+                            btnTxt: 'Check your calendar',
+                            textColor: Colors.red,
+                            borderColor: Colors.red,
+                            onTap: ()async{
+                              DateTime _now = DateTime.now();
+                              Provider.of<AppointmentProvider>(context, listen: false).setDayAndMonth(_now.weekday,_now.day, _now.month, _now.year);
+                              String token = Provider.of<AuthProvider>(context, listen: false).getUserToken();
+                              Provider.of<AppointmentProvider>(context, listen: false).getDayAppointments(
+                                  context,
+                                  DateTime.now(),
+                                  token
+                              );
+                              Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> CalendarScreen()));
+                            },
+                          ),
+
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5, bottom: 5),
+                            child: Divider(
+                              color: Colors.grey,
+                            ),
+                          ),
                          Row(
                            children: [
                              Expanded(child: Text('Service Name:', style: TextStyle(color: Colors.black54))),

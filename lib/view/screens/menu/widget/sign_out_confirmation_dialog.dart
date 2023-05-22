@@ -1,4 +1,5 @@
 import 'package:delivrd_driver/provider/auth_provider.dart';
+import 'package:delivrd_driver/provider/home_provider.dart';
 import 'package:delivrd_driver/utill/dimensions.dart';
 import 'package:delivrd_driver/view/screens/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
@@ -36,6 +37,7 @@ class SignOutConfirmationDialog extends StatelessWidget {
               Expanded(child: InkWell(
                 onTap: () async{
                       Provider.of<AuthProvider>(context, listen: false).clearSharedData().then((condition) {
+                        Provider.of<HomeProvider>(context, listen: false).clearLists();
                       Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> SplashScreen()));
                     });
                 },

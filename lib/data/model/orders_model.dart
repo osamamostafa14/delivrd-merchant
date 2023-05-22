@@ -1,3 +1,5 @@
+import 'package:delivrd_driver/data/model/appointment_model.dart';
+
 class OrdersModel {
   int? _totalSize;
   int? _totalPrice;
@@ -71,6 +73,7 @@ class Order {
   String? _phoneNumber;
   CustomerOrderModel? _customer;
   String? _tireImage;
+  AppointmentModel? _appointment;
 
   Order({int? id,
     int? userId,
@@ -92,6 +95,7 @@ class Order {
     String? phoneNumber,
     CustomerOrderModel? customer,
     String? tireImage,
+    AppointmentModel? appointment,
 
   }) {
     this._id = id;
@@ -114,6 +118,7 @@ class Order {
     this._phoneNumber = phoneNumber;
     this._customer = customer;
     this._tireImage = tireImage;
+    this._appointment = appointment;
   }
 
   int? get id => _id;
@@ -156,6 +161,8 @@ class Order {
 
   String? get tireImage => _tireImage;
 
+  AppointmentModel? get appointment => _appointment;
+
   Order.fromJson(Map<String, dynamic> json) {
     _id = json['id'];
     _userId = json['user_id'];
@@ -178,6 +185,10 @@ class Order {
     _tireImage = json['tire_image'];
     _customer = json['customer'] != null
         ? new CustomerOrderModel.fromJson(json['customer'])
+        : null;
+
+    _appointment = json['appointment'] != null
+        ? new AppointmentModel.fromJson(json['appointment'])
         : null;
   }
 
@@ -205,6 +216,10 @@ class Order {
     if (this._customer != null) {
       data['customer'] = this._customer!.toJson();
     }
+    if (this._appointment != null) {
+      data['appointment'] = this._appointment!.toJson();
+    }
+
     return data;
   }
 }
@@ -243,4 +258,6 @@ class CustomerOrderModel {
     return data;
   }
 }
+
+
 

@@ -217,7 +217,7 @@ class CalendarBottomSheetStats extends StatelessWidget {
                                         ),
                                         showTitleActions: true,
                                         minTime: DateTime(2000, 1, 1),
-                                        maxTime: DateTime(2022, 12, 31),
+                                        maxTime: DateTime.now(),
                                         onConfirm: (date) {
                                           financialsProvider.setEndDate('${date.year}-${date.month}-${date.day}');
                                         }, currentTime: DateTime.now(), locale: LocaleType.en);

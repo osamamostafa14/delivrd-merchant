@@ -34,6 +34,11 @@ class AppConstants {
   static const String VERIFY_TOKEN_URI = '/api/v1/driver/verify-mechanic-token';
   static const String FORGET_PASSWORD_URI = '/api/v1/driver/forgot-mechanic-password';
   static const String RESET_PASSWORD_URI = '/api/v1/driver/reset-mechanic-password';
+
+  /// Appointments
+  static const String DAY_APPOINTMENTS_URI = '/api/v1/driver/appointments/day-appointments';
+
+
   // internal
   static const String TOKEN = 'token';
   static const String USER_PASSWORD = 'user_password';

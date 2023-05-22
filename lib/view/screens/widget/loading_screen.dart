@@ -9,7 +9,6 @@ class LoadingScreen extends StatelessWidget {
   LoadingScreen({required this.status, @required this.token});
 
 
-
   @override
   Widget build(BuildContext context) {
 
@@ -46,11 +45,11 @@ class LoadingScreen extends StatelessWidget {
     return Consumer<HomeProvider>(
         builder: (context, homeProvider, child) {
 
-          homeProvider.updateStatus(
-              context,
-              status? 1 : 0,
-              token!,
-              _statusCallback);
+          // homeProvider.updateStatus(
+          //     context,
+          //     status? 1 : 0,
+          //     token!
+          // );
           return Scaffold(
             backgroundColor: Colors.white,
             body: Center(

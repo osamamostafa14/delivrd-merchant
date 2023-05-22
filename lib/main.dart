@@ -1,3 +1,4 @@
+import 'package:delivrd_driver/provider/appointment_provider.dart';
 import 'package:delivrd_driver/provider/bank_provider.dart';
 import 'package:delivrd_driver/provider/financials_provider.dart';
 import 'package:delivrd_driver/provider/location_provider.dart';
@@ -35,6 +36,7 @@ Future<void> main() async {
       ChangeNotifierProvider(create: (context) => di.sl<ProfileProvider>()),
       ChangeNotifierProvider(create: (context) => di.sl<BankProvider>()),
       ChangeNotifierProvider(create: (context) => di.sl<FinancialsProvider>()),
+      ChangeNotifierProvider(create: (context) => di.sl<AppointmentProvider>()),
     ],
     child: MyApp(),
   ));

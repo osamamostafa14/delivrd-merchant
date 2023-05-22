@@ -59,8 +59,8 @@ class HomeProvider extends ChangeNotifier {
   List<int> _cancelledList = [];
   List<int> get cancelledList => _cancelledList;
 
-  int? _online = 3;
-  int? get online => _online;
+  bool? _online = true;
+  bool? get online => _online;
 
 
   void getRunningOrderList(BuildContext context, String offset, String token) async {
@@ -309,31 +309,36 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> acceptRejectOrder(BuildContext context,Order order, String orderStatus, String orderId, Function callback) async {
+  Future<void> acceptRejectOrder(BuildContext context,Order order, String orderStatus, String orderId,String expectedEndTime, Function callback) async {
     _acceptIsLoading = true;
     notifyListeners();
-    ApiResponse apiResponse = await homeRepo!.acceptRejectOrder(orderStatus, orderId);
+    ApiResponse apiResponse = await homeRepo!.acceptRejectOrder(orderStatus, orderId, expectedEndTime);
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
       _acceptIsLoading = false;
-      String? _message;
-      if(orderStatus == 'accepted'){
-        _message = 'Order accepted';
-      }else if(orderStatus == 'rejected'){
-        _message = 'Order rejected';
-      }else if(orderStatus == 'cancelled'){
-        //_cancelledOrders.add(orderId);
-        _message = 'Order cancelled';
-        notifyListeners();
-      }else if(orderStatus == 'on_the_way'){
-        _message = 'Order is on the way';
-        //  _onTheWayOrders.add(orderId);
-        notifyListeners();
-      }else if(orderStatus == 'finished'){
-        //  _deliveredOrders.add(orderId);
-        _message = 'Order finished';
-        notifyListeners();
+      if(apiResponse.response!.data == 'time_not_available'){ // first check if time is available or not according to echanics calendar
+        callback(false, order, 'time_not_available', '$orderId');
+      }else{ //  time is available
+        String? _message;
+        if(orderStatus == 'accepted'){
+          _message = 'Order accepted';
+        }else if(orderStatus == 'rejected'){
+          _message = 'Order rejected';
+        }else if(orderStatus == 'cancelled'){
+          //_cancelledOrders.add(orderId);
+          _message = 'Order cancelled';
+          notifyListeners();
+        }else if(orderStatus == 'on_the_way'){
+          _message = 'Order is on the way';
+          //  _onTheWayOrders.add(orderId);
+          notifyListeners();
+        }else if(orderStatus == 'finished'){
+          //  _deliveredOrders.add(orderId);
+          _message = 'Order finished';
+          notifyListeners();
+        }
+        callback(true,order, _message, '$orderId');
       }
-      callback(true,order, _message, '$orderId');
+
     } else {
       _acceptIsLoading = false;
       callback(true,order, 'failed', '$orderId');
@@ -342,25 +347,17 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateStatus(BuildContext context, int status, String token, Function callback) async {
-
+  Future<void> updateStatus(BuildContext context, bool status, String token) async {
     _online = status;
     notifyListeners();
-    ApiResponse apiResponse = await homeRepo!.updateStatus(status, token);
+    ApiResponse apiResponse = await homeRepo!.updateStatus(status?1:0, token);
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      callback(true,'Status updated', status);
+   //   callback(true,'Status updated', status);
       _online = status;
       notifyListeners();
     } else {
-      callback(false,'Failed', status);
-      if(status == 1){
-        _online = 0;
-      }else if(status == 0){
-        _online = 1;
-      }
-
+   //   callback(false,'Failed', status);
       notifyListeners();
-
       //   ApiChecker.checkApi(context, apiResponse);
     }
     print('_online status');
@@ -369,9 +366,18 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setStatus(int status) {
+  void setStatus(bool status) {
     _online = status;
     _online = online;
+    notifyListeners();
+  }
+
+  void clearLists() {
+    _runningOrderList = [];
+    _historyOrderList = [];
+    _acceptedList = [];
+    _finishedList = [];
+    _cancelledList = [];
     notifyListeners();
   }
 

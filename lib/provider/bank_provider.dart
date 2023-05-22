@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 
 class BankProvider with ChangeNotifier {
   final BankRepo? bankRepo;
-
   BankProvider({@required this.bankRepo});
 
   bool _isLoading = false;

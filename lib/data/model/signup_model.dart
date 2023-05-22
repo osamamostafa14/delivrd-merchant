@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class SignUpModel {
   late String fullName;
   late String workshopName;
@@ -16,6 +18,9 @@ class SignUpModel {
   int? online;
    //String? aseCertificate;
    String? bgCheck;
+  String? workStartTime;
+  String? workEndTime;
+  List<dynamic>? daysOff;
   // String? birthday;
   // String? securityNumber;
   // String? zipCode;
@@ -41,6 +46,9 @@ class SignUpModel {
     // this.birthday,
     // this.securityNumber,
     // this.zipCode,
+    String? workStartTime,
+    String? workEndTime,
+    List<dynamic>? daysOff,
   });
 
   SignUpModel.fromJson(Map<String, dynamic> json) {
@@ -61,6 +69,12 @@ class SignUpModel {
     online = json['online'];
   //  aseCertificate = json['ase_certificate'];
     bgCheck = json['bg_check'];
+
+    workStartTime = json['work_start_time'];
+    workEndTime = json['work_end_time'];
+    if(json['days_off'] != null){
+      daysOff = jsonDecode(json['days_off']);
+    }
 
     // birthday = json['birthday'];
     // securityNumber = json['security_number'];
@@ -90,6 +104,10 @@ class SignUpModel {
     // data['birthday'] = this.birthday;
     // data['security_number'] = this.securityNumber;
     // data['zip_code'] = this.zipCode;
+
+    data['work_start_time'] = this.workStartTime;
+    data['work_end_time'] = this.workEndTime;
+    data['days_off'] = this.daysOff;
 
     return data;
   }

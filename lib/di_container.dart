@@ -1,9 +1,11 @@
+import 'package:delivrd_driver/data/repository/appointment_repo.dart';
 import 'package:delivrd_driver/data/repository/auth_repo.dart';
 import 'package:delivrd_driver/data/repository/financials_repo.dart';
 import 'package:delivrd_driver/data/repository/home_repo.dart';
 import 'package:delivrd_driver/data/repository/location_repo.dart';
 import 'package:delivrd_driver/data/repository/profile_repo.dart';
 import 'package:delivrd_driver/data/repository/splash_repo.dart';
+import 'package:delivrd_driver/provider/appointment_provider.dart';
 import 'package:delivrd_driver/provider/auth_provider.dart';
 import 'package:delivrd_driver/provider/financials_provider.dart';
 import 'package:delivrd_driver/provider/home_provider.dart';
@@ -33,6 +35,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ProfileRepo(dioClient: sl(), sharedPreferences: sl()));
   sl.registerLazySingleton(() => BankRepo(dioClient: sl()));
   sl.registerLazySingleton(() => FinancialsRepo(dioClient: sl()));
+  sl.registerLazySingleton(() => AppointmentRepo(dioClient: sl()));
 
   sl.registerFactory(() => SplashProvider(splashRepo: sl()));
   sl.registerFactory(() => HomeProvider(homeRepo: sl()));
@@ -41,6 +44,7 @@ Future<void> init() async {
   sl.registerFactory(() => ProfileProvider(profileRepo: sl()));
   sl.registerFactory(() => BankProvider(bankRepo: sl()));
   sl.registerFactory(() => FinancialsProvider(financialsRepo: sl()));
+  sl.registerFactory(() => AppointmentProvider(appointmentRepo: sl()));
 
   // External
   final sharedPreferences = await SharedPreferences.getInstance();

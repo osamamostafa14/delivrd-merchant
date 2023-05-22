@@ -401,7 +401,7 @@ class _AcceptedScreenState extends State<AcceptedScreen> {
                                                                             textColor: Colors.red,
                                                                             borderColor: Colors.red,
                                                                             onTap: (){
-                                                                              homeProvider.acceptRejectOrder(context,ordersList![index], 'cancelled', ordersList![index].id.toString(), _callback);
+                                                                              homeProvider.acceptRejectOrder(context,ordersList![index], 'cancelled', ordersList![index].id.toString(),'no_date', _callback);
                                                                               Navigator.pop(context);
                                                                             },
                                                                           ),
@@ -439,7 +439,7 @@ class _AcceptedScreenState extends State<AcceptedScreen> {
                                                                             textColor: Colors.red,
                                                                             borderColor: Colors.red,
                                                                             onTap: (){
-                                                                              homeProvider.acceptRejectOrder(context,ordersList![index], 'finished', ordersList![index].id.toString(), _callback);
+                                                                              homeProvider.acceptRejectOrder(context,ordersList![index], 'finished', ordersList![index].id.toString(),'no_date', _callback);
                                                                               Navigator.pop(context);
                                                                             },
                                                                           ),

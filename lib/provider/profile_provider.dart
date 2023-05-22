@@ -32,7 +32,10 @@ class ProfileProvider with ChangeNotifier {
       if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
         _userInfoModel = SignUpModel.fromJson(apiResponse.response!.data);
         print('info model -- ${jsonEncode(_userInfoModel)}');
-        callback!(true);
+        if(callback!=null){
+          callback(true);
+        }
+
       } else {
 
         if (apiResponse.error is String) {

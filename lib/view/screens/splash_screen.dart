@@ -105,13 +105,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
     return Scaffold(
       key: _globalKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.red,
       body: Center(
         child: Consumer<SplashProvider>(builder: (context, splash, child) {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset('assets/image/main_logo.png', height: 150, color: Colors.red),
+              Image.asset('assets/image/main_logo.png', height: 150, color: Colors.white),
               // Padding(
               //   padding: EdgeInsets.only(right: 12),
               //   child: Row(

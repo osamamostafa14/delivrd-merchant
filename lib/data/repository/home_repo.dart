@@ -38,18 +38,15 @@ class HomeRepo {
   Future<ApiResponse> getHistoryList(String offset, String token) async {
     try {
       final response = await dioClient!.get('${AppConstants.HISTORY_LIST_URI}?limit=10&offset=$offset&token=$token');
-      print('running true /////////////');
       return ApiResponse.withSuccess(response);
     } catch (e) {
-      print('running false /////////////');
-      print(e);
       return ApiResponse.withError(ApiErrorHandler.getMessage(e));
     }
   }
 
-  Future<ApiResponse> acceptRejectOrder(String orderStatus, String orderId) async {
+  Future<ApiResponse> acceptRejectOrder(String orderStatus, String orderId, String expectedEndTime) async {
     try {
-      final response = await dioClient!.post('${AppConstants.ACCEPT_REJECT_URI}?order_status=$orderStatus&order_id=$orderId');
+      final response = await dioClient!.post('${AppConstants.ACCEPT_REJECT_URI}?order_status=$orderStatus&order_id=$orderId&expected_end_date=$expectedEndTime');
       return ApiResponse.withSuccess(response);
     } catch (e) {
       return ApiResponse.withError(ApiErrorHandler.getMessage(e));

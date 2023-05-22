@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:delivrd_driver/data/model/appointment_model.dart';
 import 'package:delivrd_driver/data/model/orders_model.dart';
 import 'package:delivrd_driver/data/model/signup_model.dart';
 import 'package:delivrd_driver/helper/location_helper.dart';
+import 'package:delivrd_driver/provider/appointment_provider.dart';
 import 'package:delivrd_driver/provider/auth_provider.dart';
 import 'package:delivrd_driver/provider/home_provider.dart';
 import 'package:delivrd_driver/provider/location_provider.dart';
@@ -10,6 +12,9 @@ import 'package:delivrd_driver/utill/dimensions.dart';
 import 'package:delivrd_driver/utill/images.dart';
 import 'package:delivrd_driver/view/base/border_button.dart';
 import 'package:delivrd_driver/view/base/custom_button.dart';
+import 'package:delivrd_driver/view/screens/appointment/calendar_screen.dart';
+import 'package:delivrd_driver/view/screens/appointment/service_duration_screen.dart';
+import 'package:delivrd_driver/view/screens/dashboard_screen.dart';
 import 'package:delivrd_driver/view/screens/order/order_details_screen.dart';
 import 'package:delivrd_driver/view/screens/widget/loading_screen.dart';
 import 'package:flutter/material.dart';
@@ -137,8 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
             elevation: 0.0,
             leadingWidth: 45,
             actions: <Widget>[
-
-
               GestureDetector(
                   onTap: (){
                     Provider.of<HomeProvider>(context, listen: false).
@@ -149,9 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     setState(() {});
                   },
                   child: Icon(Icons.refresh, color: Colors.red, size: 30)),
-              SizedBox(width: 20)
-
-
+             const SizedBox(width: 20)
 
             ],
             leading: Padding(padding: const EdgeInsets.only(left: 10),
@@ -175,26 +176,35 @@ class _HomeScreenState extends State<HomeScreen> {
             double latitude = Provider.of<LocationProvider>(context, listen: false).currentLatitude;
             double longitude = Provider.of<LocationProvider>(context, listen: false).currentLongitude;
             _driverInfoModel = Provider.of<ProfileProvider>(context, listen: false).userInfoModel;
+
             return
             _driverInfoModel!.status == 1?
             ordersList!=null?
             Column(
               children: [
                 SwitchListTile(
-                  value: homeProvider.online == 3 ? _driverInfoModel!.online == 1? true : false
-                  : homeProvider.online == 1? true: false,
+                  value: Provider.of<ProfileProvider>(context, listen: false).userInfoModel!.online == 1? true : false,
                   onChanged: (bool isActive) async {
+                    print('test status: ${isActive}');
+                   String _token = Provider.of<AuthProvider>(context, listen: false).getUserToken();
+                   homeProvider.updateStatus(
+                       context,
+                       Provider.of<ProfileProvider>(context, listen: false).userInfoModel!.online == 0? true : false,
+                       _token
+                   ).then((value) {
+                     Provider.of<ProfileProvider>(context, listen: false).getUserInfo(context).then((value) {
+                       Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context)=> DashboardScreen(pageIndex: 0)));
+                     });
+                   });
 
-                    Navigator.push(context, MaterialPageRoute(builder:
-                        (BuildContext context)=> LoadingScreen(status: isActive,token: token)));
+                    // Navigator.push(context, MaterialPageRoute(builder:
+                    //     (BuildContext context)=> LoadingScreen(status: isActive,token: _token)));
 
                   },
                   title: Text(
-                      homeProvider.online == 3 ? _driverInfoModel!.online == 1? 'You are active': 'Your are offline'
-                          : homeProvider.online == 1? 'You are active': 'Your are offline',
+                      Provider.of<ProfileProvider>(context, listen: false).userInfoModel!.online == 1? 'You are active': 'Your are offline',
                       style: TextStyle(color:
-                      homeProvider.online == 3 ? _driverInfoModel!.online == 1? Colors.green: Colors.black54
-                          : homeProvider.online == 1? Colors.green: Colors.black54)),
+                      Provider.of<ProfileProvider>(context, listen: false).userInfoModel!.online == 1? Colors.green: Colors.black54)),
                   //activeColor: Theme.of(context).primaryColor,
                 ),
                 Divider(
@@ -202,284 +212,303 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                //if(homeProvider.online == 1 || _driverInfoModel!.online == 1 || _statusFix == 1)
 
+                Provider.of<ProfileProvider>(context, listen: false).userInfoModel!.online == 1?
+                Expanded(
+                  child: Scrollbar(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      physics: BouncingScrollPhysics(),
+                      padding: EdgeInsets.all(5),
+                      child: Center(
+                        child: SizedBox(
+                          width: 1170,
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.center,
+                            children: [
 
-                 homeProvider.online == 3 ? _driverInfoModel!.online == 1?
-                 Expanded(
-                   child: Scrollbar(
-                     child: SingleChildScrollView(
-                       controller: scrollController,
-                       physics: BouncingScrollPhysics(),
-                       padding: EdgeInsets.all(5),
-                       child: Center(
-                         child: SizedBox(
-                           width: 1170,
-                           child: Column(
-                             crossAxisAlignment:
-                             CrossAxisAlignment.center,
-                             children: [
+                              homeProvider.runningIsLoading ?
+                              Center(
+                                  child: CircularProgressIndicator(
+                                      valueColor:
+                                      AlwaysStoppedAnimation<Color>(Colors.redAccent))
+                              ):ordersList!.length > 0 ?
+                              ListView.builder(
+                                padding: EdgeInsets.all(Dimensions.PADDING_SIZE_SMALL),
+                                itemCount: ordersList!.length,
+                                physics: NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemBuilder: (context, index) {
+                                  Map<String,dynamic>? userLocation = jsonDecode(ordersList![index].userLocation);
+                                  double _userLat = userLocation!['latitude']!=null? userLocation!['latitude']: 0.0;
+                                  double _userLong = userLocation['longitude']!=null? userLocation!['latitude']: 0.0;
+                                  double _distance = LocationHelper.calculateDistance(
+                                      latitude,
+                                      longitude,
+                                      _userLat,
+                                      _userLong);
 
-                               homeProvider.runningIsLoading ?
-                               Center(
-                                   child: CircularProgressIndicator(
-                                       valueColor:
-                                       AlwaysStoppedAnimation<Color>(Colors.redAccent))
-                               ):ordersList!.length > 0 ?
-                               ListView.builder(
-                                 padding: EdgeInsets.all(Dimensions.PADDING_SIZE_SMALL),
-                                 itemCount: ordersList!.length,
-                                 physics: NeverScrollableScrollPhysics(),
-                                 shrinkWrap: true,
-                                 itemBuilder: (context, index) {
-                                   Map<String,dynamic>? userLocation = jsonDecode(ordersList![index].userLocation);
-                                   double _userLat = userLocation!['latitude']!=null? userLocation!['latitude']: 0.0;
-                                   double _userLong = userLocation['longitude']!=null? userLocation!['latitude']: 0.0;
-                                   double _distance = LocationHelper.calculateDistance(
-                                       latitude,
-                                       longitude,
-                                       _userLat,
-                                       _userLong);
+                                  return
+                                    GestureDetector(
+                                      onTap: ()async{
+                                        //  Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> RiderOrderDetails(orderModel: ordersList[index])));
+                                      },
+                                      child: Card(
+                                        child: Column(
 
-                                   return
-                                     GestureDetector(
-                                       onTap: ()async{
-                                         //  Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> RiderOrderDetails(orderModel: ordersList[index])));
-                                       },
-                                       child: Card(
-                                         child: Column(
+                                          children: [
+                                            Padding(padding: EdgeInsets.all(6),
+                                              child: Row(
 
-                                           children: [
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
+                                                  children: [
+                                                    Text('Order Id'),
+                                                    Text('#${ordersList![index].id}',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          color: Colors.black54,
+                                                          fontWeight: FontWeight.bold,
+                                                        )),
+                                                    Flexible(
+                                                      flex: 1,
+                                                      child: Center(child: Text('${ordersList![index].customer!.fullName}',
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                            color: Colors.black,
+                                                            fontWeight: FontWeight.bold,
+                                                          ))),
+                                                    ),
+                                                    Flexible(
+                                                      child: new Container(
+                                                        padding: new EdgeInsets.only(right: 13.0),
+                                                        child: new Text('${_distance.toStringAsFixed(2)}  Miles Away',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.black54,
+                                                              fontWeight: FontWeight.bold,
+                                                            )),
+                                                      ),
+                                                    ),
 
-                                                   children: [
-                                                     Text('Order Id'),
-                                                     Text('#${ordersList![index].id}',
-                                                         style: TextStyle(
-                                                           fontSize: 11,
-                                                           color: Colors.black54,
-                                                           fontWeight: FontWeight.bold,
-                                                         )),
-                                                     Flexible(
-                                                       flex: 1,
-                                                       child: Center(child: Text('${ordersList![index].customer!.fullName}',
-                                                           style: TextStyle(
-                                                             fontSize: 13,
-                                                             color: Colors.black,
-                                                             fontWeight: FontWeight.bold,
-                                                           ))),
-                                                     ),
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${_distance.toStringAsFixed(2)}  Miles Away',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black54,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
+                                                  ]),
+                                            ),
+                                            Divider(
+                                              color: Colors.grey,
+                                            ),
+                                            Padding(padding: EdgeInsets.all(6),
+                                              child: Row(
 
-                                                   ]),
-                                             ),
-                                             Divider(
-                                               color: Colors.grey,
-                                             ),
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
+                                                  children: [
+                                                    Text('Location: ',style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: Colors.black,
+                                                      fontWeight: FontWeight.normal,
+                                                    )),
+                                                    Flexible(
+                                                      child: new Container(
+                                                        padding: new EdgeInsets.only(right: 13.0),
+                                                        child: new Text('${userLocation['adminisrative_area']!= null? userLocation['adminisrative_area']:''} ${userLocation['locality']!= null? userLocation['locality']: ''}',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.black,
+                                                              fontWeight: FontWeight.bold,
+                                                            )),
+                                                      ),
+                                                    ),
+                                                  ]),
+                                            ),
+                                            Divider(
+                                              color: Colors.grey,
+                                            ),
+                                            /// Service Info
 
-                                                   children: [
-                                                     Text('Location: ',style: TextStyle(
-                                                       fontSize: 13,
-                                                       color: Colors.black,
-                                                       fontWeight: FontWeight.normal,
-                                                     )),
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${userLocation['adminisrative_area']!= null? userLocation['adminisrative_area']:''} ${userLocation['locality']!= null? userLocation['locality']: ''}',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
-                                                   ]),
-                                             ),
-                                             Divider(
-                                               color: Colors.grey,
-                                             ),
-                                             /// Service Info
+                                            Padding(padding: EdgeInsets.all(6),
+                                              child: Row(
 
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
+                                                  children: [
+                                                    Text('Service: ',style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: Colors.black,
+                                                      fontWeight: FontWeight.normal,
+                                                    )),
+                                                    Flexible(
+                                                      child: new Container(
+                                                        padding: new EdgeInsets.only(right: 13.0),
+                                                        child: new Text('${ordersList![index].serviceName}',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.black,
+                                                              fontWeight: FontWeight.bold,
+                                                            )),
+                                                      ),
+                                                    ),
 
-                                                   children: [
-                                                     Text('Service: ',style: TextStyle(
-                                                       fontSize: 13,
-                                                       color: Colors.black,
-                                                       fontWeight: FontWeight.normal,
-                                                     )),
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${ordersList![index].serviceName}',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
+                                                    Flexible(
+                                                      child: new Container(
+                                                        padding: new EdgeInsets.only(right: 13.0),
+                                                        child: new Text('${ordersList![index].totalPrice} \$',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.black,
+                                                              fontWeight: FontWeight.bold,
+                                                            )),
+                                                      ),
+                                                    ),
+                                                  ]),
+                                            ),
+                                            Divider(
+                                              color: Colors.grey,
+                                            ),
+                                            Padding(padding: EdgeInsets.all(6),
+                                              child: Row(
+                                                  children: [
+                                                    Flexible(child: Row(
+                                                      children: [
+                                                        InkWell(
+                                                          onTap: () => launch('tel:${ordersList![index].customer!.phone}'),
+                                                          child: Container(
+                                                            padding: EdgeInsets.all(Dimensions.PADDING_SIZE_EXTRA_SMALL),
+                                                            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.redAccent),
+                                                            child: Icon(Icons.call_outlined, color: Colors.white),
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 8),
+                                                        InkWell(
+                                                          onTap: () {
+                                                            Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high).then((position) {
+                                                              MapUtils.openMap(
+                                                                  userLocation['latitude'] ?? 23.8103,
+                                                                  userLocation['longitude'] ?? 90.4125,
+                                                                  position.latitude,
+                                                                  position.longitude);
+                                                            });
+                                                          },
+                                                          child: Container(
+                                                            padding: EdgeInsets.all(Dimensions.PADDING_SIZE_EXTRA_SMALL),
+                                                            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.redAccent),
+                                                            child: Icon(Icons.location_on_outlined, color: Colors.white),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )),
+                                                    Container(
+                                                      height: 40.0,
+                                                      child: BorderButton(
+                                                        btnTxt: 'Details',
+                                                        textColor: Colors.red,
+                                                        borderColor: Colors.red,
+                                                        onTap: (){
+                                                          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> OrderDetailsScreen(order: ordersList![index])));
+                                                        },
+                                                      ),
 
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${ordersList![index].totalPrice} \$',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
-                                                   ]),
-                                             ),
-                                             Divider(
-                                               color: Colors.grey,
-                                             ),
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
-                                                   children: [
-                                                     Flexible(child: Row(
-                                                       children: [
-                                                         InkWell(
-                                                           onTap: () => launch('tel:${ordersList![index].customer!.phone}'),
-                                                           child: Container(
-                                                             padding: EdgeInsets.all(Dimensions.PADDING_SIZE_EXTRA_SMALL),
-                                                             decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.redAccent),
-                                                             child: Icon(Icons.call_outlined, color: Colors.white),
-                                                           ),
-                                                         ),
-                                                         SizedBox(width: 8),
-                                                         InkWell(
-                                                           onTap: () {
-                                                             Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high).then((position) {
-                                                               MapUtils.openMap(
-                                                                   userLocation['latitude'] ?? 23.8103,
-                                                                   userLocation['longitude'] ?? 90.4125,
-                                                                   position.latitude,
-                                                                   position.longitude);
-                                                             });
-                                                           },
-                                                           child: Container(
-                                                             padding: EdgeInsets.all(Dimensions.PADDING_SIZE_EXTRA_SMALL),
-                                                             decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.redAccent),
-                                                             child: Icon(Icons.location_on_outlined, color: Colors.white),
-                                                           ),
-                                                         ),
-                                                       ],
-                                                     )),
-                                                     Container(
-                                                       height: 40.0,
-                                                       child: BorderButton(
-                                                         btnTxt: 'Details',
-                                                         textColor: Colors.red,
-                                                         borderColor: Colors.red,
-                                                         onTap: (){
-                                                           Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> OrderDetailsScreen(order: ordersList![index])));
-                                                         },
-                                                       ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    if(homeProvider.finishedList.contains(ordersList![index].id))
+                                                      Padding(padding: EdgeInsets.all(6),
+                                                        child: Row(
+                                                            children: [
 
-                                                     ),
-                                                     SizedBox(width: 10),
-                                                     if(homeProvider.finishedList.contains(ordersList![index].id))
-                                                       Padding(padding: EdgeInsets.all(6),
-                                                         child: Row(
-                                                             children: [
+                                                              Container(
+                                                                  height: 40.0,
+                                                                  child: Row(children: [
+                                                                    Text('Finished', style: TextStyle(color: Colors.green)),
+                                                                    Icon(Icons.check, color: Colors.green),
+                                                                  ])
+                                                              )
+                                                            ]),
+                                                      )
+                                                    else if(homeProvider.cancelledList.contains(ordersList![index].id))
+                                                      Padding(padding: EdgeInsets.all(6),
+                                                        child: Row(
+                                                            children: [
 
-                                                               Container(
-                                                                   height: 40.0,
-                                                                   child: Row(children: [
-                                                                     Text('Finished', style: TextStyle(color: Colors.green)),
-                                                                     Icon(Icons.check, color: Colors.green),
-                                                                   ])
-                                                               )
-                                                             ]),
-                                                       )
-                                                     else if(homeProvider.cancelledList.contains(ordersList![index].id))
-                                                       Padding(padding: EdgeInsets.all(6),
-                                                         child: Row(
-                                                             children: [
+                                                              Container(
+                                                                  height: 40.0,
+                                                                  child: Row(children: [
+                                                                    Text('Cancelled', style: TextStyle(color: Colors.redAccent)),
+                                                                    //   Icon(Icons.check, color: Colors.green),
+                                                                  ])
+                                                              )
+                                                            ]),
+                                                      )
 
-                                                               Container(
-                                                                   height: 40.0,
-                                                                   child: Row(children: [
-                                                                     Text('Cancelled', style: TextStyle(color: Colors.redAccent)),
-                                                                     //   Icon(Icons.check, color: Colors.green),
-                                                                   ])
-                                                               )
-                                                             ]),
-                                                       )
+                                                    else if(homeProvider.acceptedList.contains(ordersList![index].id))
+                                                        Padding(padding: EdgeInsets.all(6),
+                                                          child: Row(
+                                                              children: [
 
-                                                     else if(homeProvider.acceptedList.contains(ordersList![index].id))
-                                                         Padding(padding: EdgeInsets.all(6),
-                                                           child: Row(
-                                                               children: [
+                                                                Container(
+                                                                    height: 40.0,
+                                                                    child: Row(children: [
+                                                                      Text('Accepted', style: TextStyle(color: Colors.green)),
+                                                                      Icon(Icons.check, color: Colors.green),
+                                                                    ])
+                                                                )
+                                                              ]),
+                                                        )
 
-                                                                 Container(
-                                                                     height: 40.0,
-                                                                     child: Row(children: [
-                                                                       Text('Accepted', style: TextStyle(color: Colors.green)),
-                                                                       Icon(Icons.check, color: Colors.green),
-                                                                     ])
-                                                                 )
-                                                               ]),
-                                                         )
+                                                      else
+                                                        Container(
+                                                          height: 40.0,
+                                                          child: BorderButton(
+                                                            btnTxt: 'Accept',
+                                                            textColor: Colors.red,
+                                                            borderColor: Colors.red,
+                                                            onTap: (){
+                                                              showDialog(
+                                                                  context: context,
+                                                                  builder: (_) => AlertDialog(
+                                                                    title: const Text('Accept order?'),
 
-                                                       else
-                                                         Container(
-                                                           height: 40.0,
-                                                           child: BorderButton(
-                                                             btnTxt: 'Accept',
-                                                             textColor: Colors.red,
-                                                             borderColor: Colors.red,
-                                                             onTap: (){
-                                                               showDialog(
-                                                                   context: context,
-                                                                   builder: (_) => AlertDialog(
-                                                                     title: Text('Accept order?'),
+                                                                    actions: [
+                                                                      BorderButton(
+                                                                        btnTxt: 'No',
+                                                                        textColor: Colors.grey,
+                                                                        borderColor: Colors.grey,
+                                                                        onTap: (){
+                                                                          Navigator.pop(context);
+                                                                        },
+                                                                      ),
+                                                                      BorderButton(
+                                                                        btnTxt: 'Yes',
+                                                                        textColor: Colors.red,
+                                                                        borderColor: Colors.red,
+                                                                        onTap: () async {
+                                                                          Navigator.pop(context);
+                                                                          if(ordersList![index].appointment != null){
+                                                                            DateTime _appointmentDate = DateTime.parse(ordersList![index].appointment!.appointmentDate!);
+                                                                            Provider.of<AppointmentProvider>(context, listen: false).setDayAndMonth(
+                                                                                _appointmentDate.weekday,
+                                                                                _appointmentDate.day,
+                                                                                _appointmentDate.month,
+                                                                                _appointmentDate.year);
 
-                                                                     actions: [
-                                                                       BorderButton(
-                                                                         btnTxt: 'No',
-                                                                         textColor: Colors.grey,
-                                                                         borderColor: Colors.grey,
-                                                                         onTap: (){
-                                                                           Navigator.pop(context);
-                                                                         },
-                                                                       ),
-                                                                       BorderButton(
-                                                                         btnTxt: 'Yes',
-                                                                         textColor: Colors.red,
-                                                                         borderColor: Colors.red,
-                                                                         onTap: (){
-                                                                           homeProvider.acceptRejectOrder(context,ordersList![index], 'accepted', ordersList![index].id.toString(), _callback);
-                                                                           Navigator.pop(context);
-                                                                         },
-                                                                       ),
+                                                                            String token = Provider.of<AuthProvider>(context, listen: false).getUserToken();
+                                                                            Provider.of<AppointmentProvider>(context, listen: false).getDayAppointments(
+                                                                                context,
+                                                                                _appointmentDate,
+                                                                                token
+                                                                            );
+                                                                            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> ServiceDurationScreen(
+                                                                              appointmentId: ordersList![index].appointment!.id,
+                                                                              order: ordersList![index],
+                                                                            )));
+                                                                          }else{
+                                                                            homeProvider.acceptRejectOrder(context,ordersList![index], 'accepted', ordersList![index].id.toString(),'no_date', _callback);
+                                                                          }
+                                                                        },
+                                                                      ),
 
-                                                                     ],
-                                                                   )
-                                                               );
-                                                             },
-                                                           ),
-                                                      
-                                                         )
-                                                   ]),
-                                             ),
-                                             
+                                                                    ],
+                                                                  )
+                                                              );
+                                                            },
+                                                          ),
+
+                                                        )
+                                                  ]),
+                                            ),
+
                                             // Padding(padding: EdgeInsets.only(left: 12, right: 12, top: 6, bottom: 6),
                                             // child: Row(
                                             //   children: [
@@ -488,396 +517,50 @@ class _HomeScreenState extends State<HomeScreen> {
                                             // )
                                             // ),
 
-                                           ],
-                                         ),
-                                         elevation: 8,
-                                         shadowColor: Colors.white,
-                                         margin: EdgeInsets.only(left: 5,right: 5, bottom: 8),
-                                         shape:  OutlineInputBorder(
-                                             borderRadius: BorderRadius.circular(10),
-                                             borderSide: BorderSide(color: Colors.white)
-                                         ),
-                                       ),
-                                     );
-                                 },
-                               ) :
+                                          ],
+                                        ),
+                                        elevation: 8,
+                                        shadowColor: Colors.white,
+                                        margin: EdgeInsets.only(left: 5,right: 5, bottom: 8),
+                                        shape:  OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                            borderSide: BorderSide(color: Colors.white)
+                                        ),
+                                      ),
+                                    );
+                                },
+                              ) :
 
-                               Padding(padding: EdgeInsets.only(top: 20),
-                                   child: Column(
-                                     mainAxisAlignment: MainAxisAlignment.center,
-                                     crossAxisAlignment: CrossAxisAlignment.center,
-                                     children: [
-                                       Image.asset(Images.empty,
-                                         width: 110,
-                                         height: 110,
-                                       ),
-                                       Text("You have no new orders",
-                                           style: TextStyle(fontSize: 13, color: Colors.black54))
-                                     ],
-                                   )),
-
-
-                               _loadingBottom == true?
-                               Center(
-                                   child: CircularProgressIndicator(
-                                       valueColor:
-                                       AlwaysStoppedAnimation<Color>(Colors.redAccent))
-                               )
-                                   : SizedBox(),
-                             ],
-                           ),
-                         ),
-                       ),
-                     ),
-                   ),
-                 ): SizedBox()
-                     : homeProvider.online == 1?
-                 Expanded(
-                   child: Scrollbar(
-                     child: SingleChildScrollView(
-                       controller: scrollController,
-                       physics: BouncingScrollPhysics(),
-                       padding: EdgeInsets.all(5),
-                       child: Center(
-                         child: SizedBox(
-                           width: 1170,
-                           child: Column(
-                             crossAxisAlignment:
-                             CrossAxisAlignment.center,
-                             children: [
-
-                               homeProvider.runningIsLoading ?
-                               Center(
-                                   child: CircularProgressIndicator(
-                                       valueColor:
-                                       AlwaysStoppedAnimation<Color>(Colors.redAccent))
-                               ):ordersList!.length > 0 ?
-                               ListView.builder(
-                                 padding: EdgeInsets.all(Dimensions.PADDING_SIZE_SMALL),
-                                 itemCount: ordersList!.length,
-                                 physics: NeverScrollableScrollPhysics(),
-                                 shrinkWrap: true,
-                                 itemBuilder: (context, index) {
-                                   Map<String,dynamic>? userLocation = jsonDecode(ordersList![index].userLocation);
-                                   double _userLat = userLocation!['latitude']!=null? userLocation!['latitude']: 0.0;
-                                   double _userLong = userLocation!['longitude']!=null? userLocation!['latitude']: 0.0;
-                                   double _distance = LocationHelper.calculateDistance(
-                                       latitude,
-                                       longitude,
-                                       _userLat,
-                                       _userLong);
-
-                                   return
-                                     GestureDetector(
-                                       onTap: ()async{
-                                         //  Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> RiderOrderDetails(orderModel: ordersList[index])));
-                                       },
-                                       child: Card(
-                                         child: Column(
-
-                                           children: [
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
-
-                                                   children: [
-                                                     Text('Order Id'),
-                                                     Text('#${ordersList![index].id}',
-                                                         style: TextStyle(
-                                                           fontSize: 11,
-                                                           color: Colors.black54,
-                                                           fontWeight: FontWeight.bold,
-                                                         )),
-                                                     Flexible(
-                                                       flex: 1,
-                                                       child: Center(child: Text('${ordersList![index].customer!.fullName}',
-                                                           style: TextStyle(
-                                                             fontSize: 13,
-                                                             color: Colors.black,
-                                                             fontWeight: FontWeight.bold,
-                                                           ))),
-                                                     ),
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${_distance.toStringAsFixed(2)}  Miles Away',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black54,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
-
-                                                   ]),
-                                             ),
-                                             Divider(
-                                               color: Colors.grey,
-                                             ),
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
-
-                                                   children: [
-                                                     Text('Location: ',style: TextStyle(
-                                                       fontSize: 13,
-                                                       color: Colors.black,
-                                                       fontWeight: FontWeight.normal,
-                                                     )),
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${userLocation['adminisrative_area']!= null? userLocation['adminisrative_area']:''} ${userLocation['locality']!= null? userLocation['locality']: ''}',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
+                              Padding(padding: EdgeInsets.only(top: 20),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Image.asset(Images.empty,
+                                        width: 110,
+                                        height: 110,
+                                      ),
+                                      Text("You have no new orders",
+                                          style: TextStyle(fontSize: 13, color: Colors.black54))
+                                    ],
+                                  )),
 
 
-
-                                                   ]),
-                                             ),
-                                             Divider(
-                                               color: Colors.grey,
-                                             ),
-                                             /// Service Info
-
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
-
-                                                   children: [
-                                                     Text('Service: ',style: TextStyle(
-                                                       fontSize: 13,
-                                                       color: Colors.black,
-                                                       fontWeight: FontWeight.normal,
-                                                     )),
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${ordersList![index].serviceName}',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
-
-                                                     Flexible(
-                                                       child: new Container(
-                                                         padding: new EdgeInsets.only(right: 13.0),
-                                                         child: new Text('${ordersList![index].totalPrice} \$',
-                                                             style: TextStyle(
-                                                               fontSize: 12,
-                                                               color: Colors.black,
-                                                               fontWeight: FontWeight.bold,
-                                                             )),
-                                                       ),
-                                                     ),
-                                                   ]),
-                                             ),
-                                             Divider(
-                                               color: Colors.grey,
-                                             ),
-                                             Padding(padding: EdgeInsets.all(6),
-                                               child: Row(
-                                                   children: [
-                                                     Flexible(child: Row(
-                                                       children: [
-                                                         InkWell(
-                                                           onTap: () => launch('tel:${ordersList![index].customer!.phone}'),
-                                                           child: Container(
-                                                             padding: EdgeInsets.all(Dimensions.PADDING_SIZE_EXTRA_SMALL),
-                                                             decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.redAccent),
-                                                             child: Icon(Icons.call_outlined, color: Colors.white),
-                                                           ),
-                                                         ),
-                                                         SizedBox(width: 8),
-                                                         InkWell(
-                                                           onTap: () {
-                                                             Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high).then((position) {
-                                                               MapUtils.openMap(
-                                                                   userLocation['latitude'] ?? 23.8103,
-                                                                   userLocation['longitude'] ?? 90.4125,
-                                                                   position.latitude,
-                                                                   position.longitude);
-                                                             });
-                                                           },
-                                                           child: Container(
-                                                             padding: EdgeInsets.all(Dimensions.PADDING_SIZE_EXTRA_SMALL),
-                                                             decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.redAccent),
-                                                             child: Icon(Icons.location_on_outlined, color: Colors.white),
-                                                           ),
-                                                         ),
-                                                       ],
-                                                     )),
-
-                                                     if(homeProvider.finishedList.contains(ordersList![index].id))
-                                                       Padding(padding: EdgeInsets.all(6),
-                                                         child: Row(
-                                                             children: [
-
-                                                               Container(
-                                                                   height: 40.0,
-                                                                   child: Row(children: [
-                                                                     Text('Finished', style: TextStyle(color: Colors.green)),
-                                                                     Icon(Icons.check, color: Colors.green),
-                                                                   ])
-                                                               )
-                                                             ]),
-                                                       )
-                                                     else if(homeProvider.cancelledList.contains(ordersList![index].id))
-                                                       Padding(padding: EdgeInsets.all(6),
-                                                         child: Row(
-                                                             children: [
-
-                                                               Container(
-                                                                   height: 40.0,
-                                                                   child: Row(children: [
-                                                                     Text('Cancelled', style: TextStyle(color: Colors.redAccent)),
-                                                                     //   Icon(Icons.check, color: Colors.green),
-                                                                   ])
-                                                               )
-                                                             ]),
-                                                       )
-
-                                                     else if(homeProvider.acceptedList.contains(ordersList![index].id))
-                                                         Padding(padding: EdgeInsets.all(6),
-                                                           child: Row(
-                                                               children: [
-
-                                                                 Container(
-                                                                     height: 40.0,
-                                                                     child: Row(children: [
-                                                                       Text('Accepted', style: TextStyle(color: Colors.green)),
-                                                                       Icon(Icons.check, color: Colors.green),
-                                                                     ])
-                                                                 )
-                                                               ]),
-                                                         )
-
-                                                       else
-                                                         Container(
-                                                           height: 40.0,
-                                                           child: BorderButton(
-                                                             btnTxt: 'Accept Order?',
-                                                             textColor: Colors.red,
-                                                             borderColor: Colors.red,
-                                                             onTap: (){
-                                                               showDialog(
-                                                                   context: context,
-                                                                   builder: (_) => AlertDialog(
-                                                                     title: Text('Accept order?'),
-
-                                                                     actions: [
-                                                                       BorderButton(
-                                                                         btnTxt: 'No',
-                                                                         textColor: Colors.black,
-                                                                         borderColor: Colors.black,
-                                                                         onTap: (){
-                                                                           Navigator.pop(context);
-                                                                         },
-                                                                       ),
-                                                                       BorderButton(
-                                                                         btnTxt: 'Yes',
-                                                                         textColor: Colors.red,
-                                                                         borderColor: Colors.red,
-                                                                         onTap: (){
-                                                                           homeProvider.acceptRejectOrder(context,ordersList![index], 'accepted', ordersList![index].id.toString(), _callback);
-                                                                           Navigator.pop(context);
-                                                                         },
-                                                                       ),
-
-                                                                     ],
-                                                                   )
-                                                               );
-                                                             },
-                                                           ),
-                                                           //
-                                                           // RaisedButton(
-                                                           //   shape: RoundedRectangleBorder(
-                                                           //       borderRadius: BorderRadius.circular(18.0),
-                                                           //       side: BorderSide(color: Color.fromRGBO(0, 160, 227, 1))),
-                                                           //   onPressed: () {
-                                                           //     showDialog(
-                                                           //         context: context,
-                                                           //         builder: (_) => AlertDialog(
-                                                           //           title: Text('Accept order?'),
-                                                           //
-                                                           //           actions: [
-                                                           //             FlatButton(           // FlatButton widget is used to make a text to work like a button
-                                                           //               textColor: Colors.black,
-                                                           //               onPressed: () {
-                                                           //                 Navigator.pop(context);
-                                                           //               },        // function used to perform after pressing the button
-                                                           //               child: Text('No'),
-                                                           //             ),
-                                                           //             FlatButton(
-                                                           //               textColor: Colors.black,
-                                                           //               onPressed: () {
-                                                           //                 homeProvider.acceptRejectOrder(context,ordersList![index], 'accepted', ordersList![index].id.toString(), _callback);
-                                                           //                 Navigator.pop(context);
-                                                           //                 // Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentScreen(orderModel: orderModel, fromCheckout: fromCheckout)));
-                                                           //               },
-                                                           //               child: Text('Yes'),
-                                                           //             ),
-                                                           //           ],
-                                                           //         )
-                                                           //     );
-                                                           //   },
-                                                           //   padding: EdgeInsets.all(10.0),
-                                                           //   color: Color.fromRGBO(0, 160, 227, 1),
-                                                           //   textColor: Colors.white,
-                                                           //   child: Text("Accept",
-                                                           //       style: TextStyle(fontSize: 13)),
-                                                           // ),
-                                                         )
-                                                   ]),
-                                             ),
-                                           ],
-                                         ),
-                                         elevation: 8,
-                                         shadowColor: Colors.white,
-                                         margin: EdgeInsets.only(left: 5,right: 5, bottom: 8),
-                                         shape:  OutlineInputBorder(
-                                             borderRadius: BorderRadius.circular(10),
-                                             borderSide: BorderSide(color: Colors.white)
-                                         ),
-                                       ),
-                                     );
-                                 },
-                               ) :
-
-                               Padding(padding: EdgeInsets.only(top: 20),
-                                   child: Column(
-                                     mainAxisAlignment: MainAxisAlignment.center,
-                                     crossAxisAlignment: CrossAxisAlignment.center,
-                                     children: [
-                                       Image.asset(Images.empty,
-                                         width: 110,
-                                         height: 110,
-                                       ),
-                                       Text("You have no new orders",
-                                           style: TextStyle(fontSize: 13, color: Colors.black54))
-                                     ],
-                                   )),
-
-
-                               _loadingBottom == true?
-                               Center(
-                                   child: CircularProgressIndicator(
-                                       valueColor:
-                                       AlwaysStoppedAnimation<Color>(Colors.redAccent))
-                               )
-                                   : SizedBox(),
-                             ],
-                           ),
-                         ),
-                       ),
-                     ),
-                   ),
-                 ): SizedBox()
+                              _loadingBottom == true?
+                              Center(
+                                  child: CircularProgressIndicator(
+                                      valueColor:
+                                      AlwaysStoppedAnimation<Color>(Colors.redAccent))
+                              )
+                                  : SizedBox(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ) :
+                const SizedBox(),
               ],
             ) :
 
