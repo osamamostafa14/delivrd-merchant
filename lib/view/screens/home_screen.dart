@@ -240,13 +240,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                 shrinkWrap: true,
                                 itemBuilder: (context, index) {
                                   Map<String,dynamic>? userLocation = jsonDecode(ordersList![index].userLocation);
-                                  double _userLat = userLocation!['latitude']!=null? userLocation!['latitude']: 0.0;
-                                  double _userLong = userLocation['longitude']!=null? userLocation!['latitude']: 0.0;
+                                  double _userLat = userLocation!['latitude']!=null? userLocation['latitude']: 0.0;
+                                  double _userLong = userLocation['longitude']!=null? userLocation['latitude']: 0.0;
                                   double _distance = LocationHelper.calculateDistance(
                                       latitude,
                                       longitude,
                                       _userLat,
                                       _userLong);
+
+                                  DateTime now = DateTime.now();
+                                  final today = DateTime(now.year, now.month, now.day, now.hour, now.minute - 1);
+                               //   final yesterday = DateTime(now.year, now.month, now.day - 1);
+
+                                  bool appointmentExpired = false;
+                                  if(ordersList![index].appointment != null){
+                                    DateTime appointmentDate = DateTime.parse(ordersList![index].appointment!.appointmentDate!);
+                                    if(appointmentDate.isBefore(today)){
+                                      appointmentExpired = true;
+                                    }
+                                  }
+
 
                                   return
                                     GestureDetector(
@@ -448,6 +461,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         )
 
                                                       else
+                                                        appointmentExpired?
+                                                            Text('Expired', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic)) :
                                                         Container(
                                                           height: 40.0,
                                                           child: BorderButton(

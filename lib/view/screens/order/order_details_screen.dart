@@ -49,18 +49,34 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           builder: (context, homeProvider, child) {
             Map<String, dynamic> _location = jsonDecode(widget.order!.userLocation);
             Map<String, dynamic> _vehicleInfo = widget.order!.vehicleInfo !=null? jsonDecode(widget.order!.vehicleInfo!) : {'model_name' : 0};
-            DateTime _appointmentDate = DateTime.parse(widget.order!.appointment!.appointmentDate!);
-            final now = DateTime.now();
-            final today = DateTime(now.year, now.month, now.day);
-            final tomorrow = DateTime(now.year, now.month, now.day + 1);
-            String _dateText;
-            if(_appointmentDate == today) {
-             _dateText = 'Today';
-            } else if(_appointmentDate == tomorrow) {
-              _dateText = 'Tomorrow';
-            }else {
-              _dateText = DateConverter.isoStringToLocalDateOnly(_appointmentDate);
-            }
+
+            DateTime? _appointmentDate;
+            String? _dateText;
+            bool appointmentExpired = false;
+           if(widget.order!.appointment != null){
+              _appointmentDate = DateTime.parse(widget.order!.appointment!.appointmentDate!);
+             final now = DateTime.now();
+             final today = DateTime(now.year, now.month, now.day);
+             final tomorrow = DateTime(now.year, now.month, now.day + 1);
+
+             if(_appointmentDate == today) {
+               _dateText = 'Today';
+             } else if(_appointmentDate == tomorrow) {
+               _dateText = 'Tomorrow';
+             }else {
+               _dateText = DateConverter.isoStringToLocalDateOnly(_appointmentDate);
+             }
+
+             final past = DateTime(now.year, now.month, now.day, now.hour, now.minute - 1);
+             //   final yesterday = DateTime(now.year, now.month, now.day - 1);
+
+             if(widget.order!.appointment != null){
+               if(_appointmentDate.isBefore(past)){
+                 appointmentExpired = true;
+               }
+             }
+           }
+
 
             return SafeArea(
               child: Scrollbar(
@@ -72,19 +88,20 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       width: 1170,
                       child: Column(
                         children: [
+                          widget.order!.appointment != null?
                           Row(
                             children: [
                              const Expanded(child: Text('Appointment date:', style: TextStyle(color: Colors.black54))),
                               Expanded(child: Row(
                                 children: [
-                                  Text('${DateConverter.convertTimeToTime(_appointmentDate)}',
+                                  Text('${DateConverter.convertTimeToTime(_appointmentDate!)}',
                                       style: const TextStyle(
                                           color: Colors.black87,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 13
                                       )),
                                   const SizedBox(width: 10),
-                                  Text(_dateText,
+                                  Text(_dateText!,
                                       style: const TextStyle(
                                           color: Colors.black87,
                                           fontWeight: FontWeight.normal,
@@ -94,8 +111,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                 ],
                               )),
                             ],
-                          ),
+                          ) :  SizedBox(),
                           const SizedBox(height: 10),
+                          widget.order!.appointment != null?
+                          appointmentExpired ?
+                          Text('Expired', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic)) :
                           BorderButton(
                             width: 350,
                             btnTxt: 'Check your calendar',
@@ -112,7 +132,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                               );
                               Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> CalendarScreen()));
                             },
-                          ),
+                          ): SizedBox(),
 
                           Padding(
                             padding: const EdgeInsets.only(top: 5, bottom: 5),
