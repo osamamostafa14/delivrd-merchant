@@ -56,7 +56,8 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                         child: SizedBox(
                           width: 1170,
                           child: bankProvider.isLoadingAccounts?
-                          Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor))):
+                          Center(child: CircularProgressIndicator(valueColor:
+                          AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor))):
                           Column(
                             crossAxisAlignment:
                             CrossAxisAlignment.start,

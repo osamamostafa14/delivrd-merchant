@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:delivrd_driver/data/model/response/response_model.dart';
 import 'package:delivrd_driver/data/repository/location_repo.dart';
 import 'package:flutter/foundation.dart';
@@ -10,7 +9,6 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
 
 class LocationProvider with ChangeNotifier {
   final SharedPreferences? sharedPreferences;
@@ -28,10 +26,10 @@ class LocationProvider with ChangeNotifier {
   String? _addressStreet;
   String? get addressStreet => _addressStreet;
 
-   double _latitude = 0.0;
+  double _latitude = 0.0;
   double get latitude => _latitude;
 
-   double _longitude = 0.0;
+  double _longitude = 0.0;
   double get longitude => _longitude;
 
   String? _searchedLocation;
@@ -54,41 +52,60 @@ class LocationProvider with ChangeNotifier {
   String? _postalCode;
   String? get postalCode => _postalCode;
 
-   double _currentLatitude = 0.0;
+  double _currentLatitude = 0.0;
   double get currentLatitude => _currentLatitude;
 
-   double _currentLongitude = 0.0;
+  double _currentLongitude = 0.0;
   double get currentLongitude => _currentLongitude;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _searchError = false;
+  bool get searchError => _searchError;
 
-  updateSearchLocation({required String location, required double latitude,required double longitude, Function? callback}) async {
+  Marker _origin = Marker(markerId:  const MarkerId('origin'));
+  Marker get origin => _origin;
+
+  updateSearchLocation(BuildContext context, {required String location, required double latitude,required double longitude, Function? callback}) async {
+
     if(location!= ''){
       _searchedLocation = location;
-      List<Location> locations = await locationFromAddress(location);
-      _latitude = locations[0].latitude;
-      _longitude = locations[0].longitude;
-      print('lat long ///////////////');
-      print('$_latitude --- $_longitude');
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        _latitude,
-        _longitude,
-      );
-      Placemark place = placemarks[0];
-      _locality = place.locality;
-      _administrativeArea = place.administrativeArea;
-      _postalCode = place.postalCode;
-      print('address data ///////////////');
-      print('$_postalCode --- $_locality --- $administrativeArea');
+      _searchError = false;
+      try {
+        List<Location> locations = await locationFromAddress(location);
 
-      _addressName = '${placemarks[0].name} ${placemarks[0].street}';
-      print('address name');
-      print(_addressName);
+        _latitude = locations[0].latitude;
+        _longitude = locations[0].longitude;
+        notifyListeners();
+        print('lat new : $_latitude --- $_longitude');
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          _latitude,
+          _longitude,
+        );
+        Placemark place = placemarks[0];
+        _locality = place.locality;
+        _administrativeArea = place.administrativeArea;
+        _postalCode = place.postalCode;
+        print('address data ///////////////');
+        print('$_postalCode --- $_locality --- $administrativeArea');
 
-      callback!(true);
+        _addressName = '${placemarks[0].name} ${placemarks[0].street}';
+        print('address name');
+        print(_addressName);
 
+        callback!(true);
+      }catch (e) {
+        print('error here 22 ${e}');
+
+        showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: Text('Sorry!'),
+              content: Text('Could not find any result for the supplied address or coordinates, try another place'),
+            )
+        );
+      }
     }
 
     else {
@@ -122,6 +139,7 @@ class LocationProvider with ChangeNotifier {
     Placemark place = placemarks[0];
     _addressName = place.name;
     _addressStreet = place.street;
+    print('_currentLatitude: ${_currentLatitude}');
     notifyListeners();
   }
 
@@ -184,7 +202,6 @@ class LocationProvider with ChangeNotifier {
       address,
       token,
     );
-
     if (response.statusCode == 200) {
       _isLoading = false;
       Map map = jsonDecode(await response.stream.bytesToString());
@@ -200,4 +217,14 @@ class LocationProvider with ChangeNotifier {
     return _responseModel;
   }
 
+  void addMarker(LatLng pos){
+    _origin = Marker(
+      markerId: const MarkerId('origin'),
+      infoWindow: const InfoWindow(title: 'My Location'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      position: pos,
+    );
+
+    notifyListeners();
+  }
 }

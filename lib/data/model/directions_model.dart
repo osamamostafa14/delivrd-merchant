@@ -12,6 +12,4 @@ class Directions {
     @required this.totalDistance,
     @required this.totalDuration,
   });
-
-
 }

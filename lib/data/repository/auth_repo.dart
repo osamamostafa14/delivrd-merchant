@@ -42,7 +42,7 @@ class AuthRepo {
   //   }
   // }
 
-  Future<http.StreamedResponse> registration(SignUpModel? signUpModel,  File? bgCheck) async {
+  Future<http.StreamedResponse> registration(SignUpModel? signUpModel) async {
     print('signUpModel ///////////////////');
     print(jsonEncode(signUpModel));
 
@@ -57,26 +57,23 @@ class AuthRepo {
     // }
 
 
-    if(bgCheck != null) {
-      print('----------------${bgCheck.readAsBytes().asStream()}/${bgCheck.lengthSync()}/${bgCheck.path.split('/').last}');
-      request.files.add(http.MultipartFile('bg_check_file', new http.ByteStream(DelegatingStream.typed(bgCheck.openRead())), bgCheck.lengthSync(), filename: bgCheck.path.split('/').last));
-    }
+    // if(bgCheck != null) {
+    //   print('----------------${bgCheck.readAsBytes().asStream()}/${bgCheck.lengthSync()}/${bgCheck.path.split('/').last}');
+    //   request.files.add(http.MultipartFile('bg_check_file', new http.ByteStream(DelegatingStream.typed(bgCheck.openRead())), bgCheck.lengthSync(), filename: bgCheck.path.split('/').last));
+    // }
 
     Map<String, String> _fields = Map();
     {
       _fields.addAll(<String, String>{
         '_method': 'post',
         'full_name': signUpModel!.fullName,
-        'workshop_name': signUpModel!.workshopName,
-        'phone': signUpModel!.phone,
-        'email': signUpModel!.email,
-        'business_name': signUpModel!.businessName,
-        'tax_id': signUpModel!.taxId,
-        'password': signUpModel!.password,
-        'latitude': signUpModel!.latitude,
-        'longitude': signUpModel!.longitude,
-        'address': signUpModel!.address,
-        'coverage': signUpModel!.coverage.toString(),
+        'workshop_name': signUpModel.workshopName,
+        'phone': signUpModel.phone,
+        'email': signUpModel.email,
+        'password': signUpModel.password,
+        'latitude': signUpModel.latitude,
+        'longitude': signUpModel.longitude,
+        'address': signUpModel.address,
       });
     }
     request.fields.addAll(_fields);
@@ -89,7 +86,6 @@ class AuthRepo {
   }
 
   Future<ApiResponse> checkEmail(String email) async {
-
     try {
       Response response = await dioClient!.post(AppConstants.CHECK_EMAIL_URI, data: {"email": email});
       return ApiResponse.withSuccess(response);

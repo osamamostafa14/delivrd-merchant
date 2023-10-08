@@ -16,7 +16,7 @@ class DatepickerBottomSheet extends StatelessWidget {
           width: 550,
           padding: EdgeInsets.all(Dimensions.PADDING_SIZE_DEFAULT),
           decoration: BoxDecoration(
-            color: Theme.of(context).accentColor,
+            color: Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(20)),
           ),
           child: Consumer<FinancialsProvider>(

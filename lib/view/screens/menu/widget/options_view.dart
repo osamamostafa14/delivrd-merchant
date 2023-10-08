@@ -1,12 +1,14 @@
+import 'dart:io';
 import 'package:delivrd_driver/helper/responsive_helper.dart';
 import 'package:delivrd_driver/provider/auth_provider.dart';
 import 'package:delivrd_driver/provider/location_provider.dart';
+import 'package:delivrd_driver/provider/services_provider.dart';
 import 'package:delivrd_driver/provider/splash_provider.dart';
 import 'package:delivrd_driver/utill/dimensions.dart';
 import 'package:delivrd_driver/utill/images.dart';
 import 'package:delivrd_driver/view/base/border_button.dart';
 import 'package:delivrd_driver/view/base/custom_snack_bar.dart';
-import 'package:delivrd_driver/view/screens/chat/chat_screen.dart';
+import 'package:delivrd_driver/view/screens/category/select_categories_screen.dart';
 import 'package:delivrd_driver/view/screens/financials/bank_accounts_screen.dart';
 import 'package:delivrd_driver/view/screens/financials/earnings_screen.dart';
 import 'package:delivrd_driver/view/screens/location/update_location.dart';
@@ -30,7 +32,6 @@ class OptionsView extends StatelessWidget {
     final TextEditingController _passwordController = TextEditingController();
     final TextEditingController _confirmPasswordController = TextEditingController();
     bool _loading = false;
-
 
     return Scrollbar(
       child: SingleChildScrollView(
@@ -96,13 +97,37 @@ class OptionsView extends StatelessWidget {
                     Provider.of<LocationProvider>(context, listen: false).resetLatLong();
                     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> EarningsScreen()));
                   },
-
                   leading: Icon(
                     Icons.monetization_on,
                     size: 23.0,
                     color: Colors.black54,
                   ),
                   title: Text('Earnings',
+                      style: TextStyle(
+                          fontSize: 15
+                      )),
+                ),
+
+                ListTile(
+                  onTap: () {
+                    Provider.of<ServicesProvider>(context, listen: false).getCategories(context);
+                    Provider.of<ServicesProvider>(context, listen: false).getDriverCategories(context,Provider.of<AuthProvider>(context, listen: false).getUserToken()).then((value) {
+                      Provider.of<ServicesProvider>(context, listen: false).driverCategoryList.forEach((category) {
+                        Provider.of<ServicesProvider>(context, listen: false).setSelectedValues(
+                            category.id!,
+                            true,
+                            category);
+                      });
+                    });
+                    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> SelectCategoriesScreen()));
+                  },
+
+                  leading: Icon(
+                    Icons.miscellaneous_services,
+                    size: 23.0,
+                    color: Colors.black54,
+                  ),
+                  title: Text('Services',
                       style: TextStyle(
                           fontSize: 15
                       )),
@@ -147,6 +172,25 @@ class OptionsView extends StatelessWidget {
                                 }
                               },
                             ),
+
+                            BorderButton(
+                              btnTxt: 'SMS',
+                              borderColor: Theme.of(context).primaryColor,
+                              textColor: Theme.of(context).primaryColor,
+                              onTap: () async {
+                                String phoneNumber = Provider.of<SplashProvider>(context, listen: false).configModel!.appPhone!;
+                                if (Platform.isAndroid) {
+                                  String uri = 'sms:${phoneNumber}';
+                                  await launch(uri);
+                                } else if (Platform.isIOS) {
+                                  // iOS
+                                  String uri = 'sms:${phoneNumber}';
+                                  // const uri = 'sms:0039-222-060-888&body=hello%20there';
+                                  await launch(uri);
+                                }
+                              },
+                            ),
+
                           ],
                         );
                       },

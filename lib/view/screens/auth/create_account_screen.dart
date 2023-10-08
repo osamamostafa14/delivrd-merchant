@@ -1,16 +1,15 @@
-import 'dart:convert';
 import 'package:delivrd_driver/data/model/signup_model.dart';
 import 'package:delivrd_driver/provider/auth_provider.dart';
+import 'package:delivrd_driver/provider/location_provider.dart';
 import 'package:delivrd_driver/utill/dimensions.dart';
-import 'package:delivrd_driver/view/base/border_button.dart';
 import 'package:delivrd_driver/view/base/custom_button.dart';
 import 'package:delivrd_driver/view/base/custom_snack_bar.dart';
 import 'package:delivrd_driver/view/screens/auth/login_screen.dart';
 import 'package:delivrd_driver/view/screens/location/select_location.dart';
-import 'package:delivrd_driver/view/screens/widget/launch_screen.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:delivrd_driver/view/screens/location/widgets/permission_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 
@@ -27,78 +26,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _workshopNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _coverageController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _businessNameController = TextEditingController();
-  final TextEditingController _taxIdController = TextEditingController();
   final TextEditingController _confirmPasswordController =
   TextEditingController();
 
   String countryCode = "";
   String? accountPhoneNumber;
-  File bgCheck = new File('');
-  File aseCertificate = new File('');
-  final asePicker = ImagePicker();
-  final bgCheckPicker = ImagePicker();
-  bool _aseChecked = false;
-  bool _bgChecked = false;
-
-  File? fileAse;
-  File? fileBC;
-
-  PlatformFile pickedAseFile = PlatformFile(name: 'Empty', size: 1);
-  PlatformFile pickedBCFile = PlatformFile(name: 'Empty', size: 1);
-
-  Future selectASE () async {
-    final aseFile = await FilePicker.platform.pickFiles();
-    if(aseFile == null) return;
-
-    setState(() {
-      pickedAseFile = aseFile.files.first;
-      fileAse = File(pickedAseFile.path!);
-    });
-  }
-
-  Future selectBC () async {
-    final bgFile = await FilePicker.platform.pickFiles();
-    if(bgFile == null) return;
-
-    setState(() {
-      pickedBCFile = bgFile.files.first;
-      fileBC = File(pickedBCFile.path!);
-    });
-  }
-
-
-  void _chooseAseCertificate() async {
-    final pickedFile = await asePicker.getImage(
-        source: ImageSource.gallery,
-        imageQuality: 50,
-        maxHeight: 500,
-        maxWidth: 500);
-    setState(() {
-      if (pickedFile != null) {
-        aseCertificate = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
-  }
-  void _chooseBgCheck() async {
-    final pickedFile2 = await bgCheckPicker.getImage(
-        source: ImageSource.gallery,
-        imageQuality: 50,
-        maxHeight: 500,
-        maxWidth: 500);
-    setState(() {
-      if (pickedFile2 != null) {
-        bgCheck = File(pickedFile2.path);
-      } else {
-        print('No image selected.');
-      }
-    });
-  }
-
 
   @override
   void initState() {
@@ -124,11 +57,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
 
+                      SizedBox(height: 22),
+
                       Center(
                           child: Text(
                               'Create your mechanic account',
                               style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold
                               )
                           )),
@@ -158,29 +93,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         ),
                       ),
 
-                      SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
-                      TextField (
-                        controller: _businessNameController,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
-                            border: InputBorder.none,
-                            labelText: 'Business Name',
-                            hintText: 'Business Name'
-                        ),
-                      ),
-
-                      SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
-                      TextField (
-                        controller: _taxIdController,
-                        keyboardType: TextInputType.number,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
-                            border: InputBorder.none,
-                            labelText: 'State Tax ID/EIN number',
-                            hintText: 'State Tax ID/EIN number'
-                        ),
-                      ),
-
                       SizedBox(height: Dimensions.PADDING_SIZE_LARGE),
 
                       TextField (
@@ -190,18 +102,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             border: InputBorder.none,
                             labelText: 'Phone number',
                             hintText: 'Enter Your phone number'
-                        ),
-                      ),
-
-                      SizedBox(height: Dimensions.PADDING_SIZE_LARGE),
-
-                      TextField (
-                        controller: _coverageController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                            border: InputBorder.none,
-                            labelText: 'Coverage distance (miles)',
-                            hintText: 'Coverage'
                         ),
                       ),
 
@@ -234,115 +134,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       Divider(
                         color: Colors.grey,
                       ),
-
-                      SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
-                      //
-                      //
-                      // //ASE
-                      // SizedBox(height: 10),
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.center,
-                      //   children: [
-                      //     Text(
-                      //       pickedAseFile.name!='Empty'? '${pickedAseFile.name}': 'No selected file',
-                      //       style: TextStyle(
-                      //           fontSize: 12,
-                      //           color: Colors.black54
-                      //       ),
-                      //     ),
-                      //     SizedBox(width: 5),
-                      //     pickedAseFile.name!='Empty'?
-                      //     Icon(Icons.check_circle, color: Colors.green, size: 16) : SizedBox()
-                      //   ],
-                      // ),
-                      // SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
-                      // Center(
-                      //   child: BorderButton(
-                      //     btnTxt: 'Upload ASE Certificate',
-                      //     textColor: Theme.of(context).primaryColor,
-                      //     width: 180,
-                      //     fontSize: 11,
-                      //     borderColor: Theme.of(context).primaryColor,
-                      //     onTap: (){
-                      //       selectASE();
-                      //     },
-                      //   ),
-                      // ),
-
-                      //ASE
                       SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            pickedBCFile.name!='Empty'? '${pickedBCFile.name}': 'No selected file',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.black54
-                            ),
-                          ),
-                          SizedBox(width: 5),
-                          pickedBCFile.name!='Empty'?
-                          Icon(Icons.check_circle, color: Colors.green, size: 16) : SizedBox()
-                        ],
-                      ),
-                      SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
-                      Center(
-                        child: BorderButton(
-                          btnTxt: 'Upload background check',
-                          textColor: Theme.of(context).primaryColor,
-                          width: 180,
-                          fontSize: 11,
-                          borderColor: Theme.of(context).primaryColor,
-                          onTap: (){
-                            selectBC();
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                      Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'If you don’t have a background check you can create',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black54
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: (){
-                                Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> LaunchScreen()));
-                              },
-                              child: Row(
-                                children: [
-                                  Text(
-                                    ' a new one ',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54
-                                    ),
-                                  ),
-                                  Text(
-                                    'here',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blueAccent,
-                                        fontWeight: FontWeight.bold
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Divider(
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 10),
+
                       !authProvider.isLoading
                           ? CustomButton(
                         btnTxt: 'Next',
@@ -357,15 +150,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           String _workshopName =
                           _workshopNameController.text.trim();
 
-                          String _businessName =
-                          _businessNameController.text.trim();
-
-                          String _taxId =
-                          _taxIdController.text.trim();
-
-                          String _coverage =
-                          _coverageController.text.trim();
-
                           String _password =
                           _passwordController.text.trim();
 
@@ -375,11 +159,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           //   showCustomSnackBar('Please upload ASE Certificate',
                           //       context);
                           // }
-                             if(pickedBCFile.name == 'Empty'){
-                            showCustomSnackBar('Please upload Background Check',
-                                context);
-                          }
-                          else if (_fullName.isEmpty) {
+                        if (_fullName.isEmpty) {
                             showCustomSnackBar(
                                 'Enter your full name',
                                 context);
@@ -394,22 +174,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                 context);
                           }
 
-                          else if (_businessName.isEmpty) {
-                            showCustomSnackBar(
-                                'Enter your business name',
-                                context);
-                          }
-                          else if (_taxId.isEmpty) {
-                            showCustomSnackBar(
-                                'Enter your State Tax ID/EIN number',
-                                context);
-                          }
-
-                          else if (_coverage.isEmpty) {
-                            showCustomSnackBar(
-                                'Enter the coverage distance that you can reach',
-                                context);
-                          }
                           else if (_password.isEmpty) {
                             showCustomSnackBar(
                                 'Enter your password',
@@ -430,23 +194,30 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             SignUpModel signUpModel = SignUpModel(
                                 fullName: _fullName,
                                 workshopName: _workshopName,
-                                businessName: _businessName,
-                                taxId: _taxId,
                                 email: widget.email,
                                 password: _password,
                                 phone: _phone,
-                                coverage: int.parse(_coverage),
                                 address: '',
                                 longitude: '',
                                 latitude: ''
                             );
 
-                            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=>
-                                SelectLocation(
-                                  signUpModel: signUpModel,
-                                  aseCertificate: fileAse,
-                                  bgCheck: fileBC,
-                                )));
+                            LocationPermission permission = await Geolocator.checkPermission();
+                            if(permission == LocationPermission.denied) {
+                              showCustomSnackBar('You have to allow location permission to get our services', context);
+                            }else if(permission == LocationPermission.deniedForever) {
+                              showDialog(context: context, barrierDismissible: false, builder: (context) => PermissionDialog());
+                            }else {
+                              authProvider.setSignUpModel(signUpModel);
+                              Provider.of<LocationProvider>(context, listen: false).getCurrentLocation().then((value) {
+                                Provider.of<LocationProvider>(context, listen: false).addMarker(
+                                    LatLng(Provider.of<LocationProvider>(context, listen: false).currentLatitude,
+                                        Provider.of<LocationProvider>(context, listen: false).currentLongitude)
+                                );
+
+                                Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> SelectLocation()));
+                              });
+                            }
                             // authProvider
                             //     .registration(signUpModel, aseCertificate, bgCheck)
                             //     .then((status) async {
@@ -478,7 +249,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               Text(
                                 'Already have an account',
                                 style: TextStyle(
-                                    fontSize: 12
+                                    fontSize: 14
                                 ),
                               ),
                               SizedBox(width: Dimensions.PADDING_SIZE_SMALL),
@@ -486,7 +257,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                 'Login',
                                 style: TextStyle(
                                     color: Colors.grey,
-                                    fontSize: 12
+                                    fontSize: 14
                                 ),
                               ),
                             ],

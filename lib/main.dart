@@ -3,6 +3,7 @@ import 'package:delivrd_driver/provider/bank_provider.dart';
 import 'package:delivrd_driver/provider/financials_provider.dart';
 import 'package:delivrd_driver/provider/location_provider.dart';
 import 'package:delivrd_driver/provider/profile_provider.dart';
+import 'package:delivrd_driver/provider/services_provider.dart';
 import 'package:delivrd_driver/view/base/custom_snack_bar.dart';
 import 'package:delivrd_driver/view/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +38,7 @@ Future<void> main() async {
       ChangeNotifierProvider(create: (context) => di.sl<BankProvider>()),
       ChangeNotifierProvider(create: (context) => di.sl<FinancialsProvider>()),
       ChangeNotifierProvider(create: (context) => di.sl<AppointmentProvider>()),
+      ChangeNotifierProvider(create: (context) => di.sl<ServicesProvider>()),
     ],
     child: MyApp(),
   ));

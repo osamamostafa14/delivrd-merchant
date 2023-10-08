@@ -63,8 +63,8 @@ class ConfigModel {
     _appName = json['store_name'];
     _appLogo = json['store_logo'];
     _appAddress = json['store_address'];
-    _appPhone = json['store_phone'];
-    _appEmail = json['store_email'];
+    _appPhone = json['app_phone'];
+    _appEmail = json['app_email'];
     _baseUrls = json['base_urls'] != null
         ? new BaseUrls.fromJson(json['base_urls'])
         : null;
@@ -76,7 +76,6 @@ class ConfigModel {
     _aboutUs = json['about_us'];
     _appLocationCoverage = json['restaurant_location_coverage'] != null
         ? new AppLocationCoverage.fromJson(json['restaurant_location_coverage']) : null;
-
   }
 
   Map<String, dynamic> toJson() {
@@ -84,8 +83,8 @@ class ConfigModel {
     data['restaurant_name'] = this._appName;
     data['restaurant_logo'] = this._appLogo;
     data['restaurant_address'] = this._appAddress;
-    data['restaurant_phone'] = this._appPhone;
-    data['restaurant_email'] = this._appEmail;
+    data['app_phone'] = this._appPhone;
+    data['app_email'] = this._appEmail;
     if (this._baseUrls != null) {
       data['base_urls'] = this._baseUrls!.toJson();
     }

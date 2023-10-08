@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   SizedBox(width: Dimensions.PADDING_SIZE_SMALL),
                                   Text(
                                     'Remember me',
-                                    style: TextStyle(fontSize: 10, color: Colors.black54),
+                                    style: TextStyle(fontSize: 14, color: Colors.black54),
                                   )
                                 ],
                               ),
@@ -194,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox():
                 InkWell(
                   onTap: () {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => SignUpScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => SignUpScreen()));
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -204,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           'Signup',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 15,
                             color: Colors.black54
 
                           ),

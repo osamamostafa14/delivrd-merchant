@@ -22,6 +22,9 @@ class AuthProvider extends ChangeNotifier {
   bool _isPhoneNumberVerificationButtonLoading = false;
   bool get isPhoneNumberVerificationButtonLoading => _isPhoneNumberVerificationButtonLoading;
 
+  bool _verifyEmailLoading = false;
+  bool get verifyEmailLoading => _verifyEmailLoading;
+
   String? _verificationMsg = '';
   String? get verificationMessage => _verificationMsg;
 
@@ -40,6 +43,14 @@ class AuthProvider extends ChangeNotifier {
   // for forgot password
   bool _isForgotPasswordLoading = false;
   bool get isForgotPasswordLoading => _isForgotPasswordLoading;
+
+  SignUpModel? _signUpModel;
+  SignUpModel? get signUpModel => _signUpModel;
+
+  void setSignUpModel(SignUpModel model) {
+    _signUpModel = model;
+    notifyListeners();
+  }
 
   Future<ResponseModel> forgetPassword(String email) async {
     _isForgotPasswordLoading = true;
@@ -156,11 +167,11 @@ class AuthProvider extends ChangeNotifier {
 
 
 
-  Future<ResponseModel> registration(SignUpModel? signUpModel, File? bgCheck) async {
+  Future<ResponseModel> registration(SignUpModel? signUpModel) async {
     _isLoading = true;
     notifyListeners();
     ResponseModel _responseModel;
-    http.StreamedResponse response = await authRepo!.registration(signUpModel,bgCheck);
+    http.StreamedResponse response = await authRepo!.registration(signUpModel);
 
     if (response.statusCode == 200) {
       _isLoading = false;
@@ -228,12 +239,12 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<ResponseModel> verifyEmail(String email) async {
-    _isPhoneNumberVerificationButtonLoading = true;
+    _verifyEmailLoading = true;
     _verificationMsg = '';
     notifyListeners();
 
     ApiResponse apiResponse = await authRepo!.verifyEmail(email, _verificationCode);
-    _isPhoneNumberVerificationButtonLoading = false;
+    _verifyEmailLoading = false;
     notifyListeners();
     ResponseModel responseModel;
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
@@ -338,4 +349,8 @@ class AuthProvider extends ChangeNotifier {
     return authRepo!.getUserToken();
   }
 
+  void resetLoading() {
+    _isLoading = false;
+    notifyListeners();
+  }
 }

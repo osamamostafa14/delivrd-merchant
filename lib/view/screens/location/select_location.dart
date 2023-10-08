@@ -1,24 +1,18 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:delivrd_driver/data/model/directions_model.dart';
 import 'package:delivrd_driver/data/model/signup_model.dart';
 import 'package:delivrd_driver/provider/auth_provider.dart';
 import 'package:delivrd_driver/provider/location_provider.dart';
 import 'package:delivrd_driver/provider/profile_provider.dart';
+import 'package:delivrd_driver/provider/services_provider.dart';
 import 'package:delivrd_driver/utill/dimensions.dart';
 import 'package:delivrd_driver/view/base/custom_button.dart';
-import 'package:delivrd_driver/view/screens/dashboard_screen.dart';
+import 'package:delivrd_driver/view/base/custom_snack_bar.dart';
+import 'package:delivrd_driver/view/screens/category/select_categories_screen.dart';
 import 'package:delivrd_driver/view/screens/location/place_search.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 class SelectLocation extends StatefulWidget {
-  final SignUpModel? signUpModel;
-  final File? aseCertificate;
-  final File? bgCheck;
-
-  SelectLocation({@required this.signUpModel, @required this.aseCertificate, @required this.bgCheck});
   @override
   _SelectLocationState createState() => _SelectLocationState();
 }
@@ -30,9 +24,9 @@ class _SelectLocationState extends State<SelectLocation> {
   // );
 
   GoogleMapController? _googleMapController;
-    Marker _origin = Marker(markerId:  const MarkerId('origin'),);
+  //  Marker _origin = Marker(markerId:  const MarkerId('origin'),);
 
-   Directions? _info;
+  //Directions? _info;
 
   // BitmapDescriptor originIcon;
   // BitmapDescriptor destinationIcon;
@@ -40,11 +34,7 @@ class _SelectLocationState extends State<SelectLocation> {
   @override
   void initState() {
     super.initState();
-    if(Provider.of<LocationProvider>(context, listen: false).latitude!=0.0){
-      _addMarker1(LatLng(
-          Provider.of<LocationProvider>(context, listen: false).latitude,
-          Provider.of<LocationProvider>(context, listen: false).longitude));
-    }
+
   }
 
   @override
@@ -75,9 +65,47 @@ class _SelectLocationState extends State<SelectLocation> {
                         Provider.of<LocationProvider>(context, listen: false).longitude),
                     zoom: 15,
                   ),
-                  onMapCreated: (controller) => _googleMapController = controller,
+                  onLongPress: (LatLng latLng){
+                    latLng =
+
+                        LatLng(
+                            Provider.of<LocationProvider>(context, listen: false).latitude,
+                            Provider.of<LocationProvider>(context, listen: false).longitude);
+
+                    print('lat here: ${Provider.of<LocationProvider>(context, listen: false).longitude}');
+
+                    try {
+                      _googleMapController!.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: latLng,
+                            zoom: 15,
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      print('error 3 here: ${e}');
+                    }
+                  },
+
+                  onMapCreated: (controller) {
+                    _googleMapController = controller;
+
+                    _googleMapController!.animateCamera(
+                      CameraUpdate.newCameraPosition( CameraPosition(
+                        target: Provider.of<LocationProvider>(context, listen: false).latitude!=0.0?
+                        LatLng(
+                            Provider.of<LocationProvider>(context, listen: false).latitude,
+                            Provider.of<LocationProvider>(context, listen: false).longitude):
+                        LatLng(
+                            Provider.of<LocationProvider>(context, listen: false).currentLatitude,
+                            Provider.of<LocationProvider>(context, listen: false).currentLongitude),
+                        zoom: 15,
+                      )),
+                    );
+                  },
                   markers: {
-                   _origin,
+                    locationProvider.origin,
                   },
 
                   //  onLongPress: _addMarker1,
@@ -88,28 +116,27 @@ class _SelectLocationState extends State<SelectLocation> {
                     GestureDetector(
                       onTap: () async{
                         Navigator.push(context, MaterialPageRoute(builder: (_) => PlaceSearch()))
-                            .then((_) => setState(() {
+                            .then((_){
                           _googleMapController!.animateCamera(
-                            _info != null
-                                ? CameraUpdate.newLatLngBounds(_info!.bounds, 100.0)
-                                : CameraUpdate.newCameraPosition( CameraPosition(
+                            CameraUpdate.newCameraPosition( CameraPosition(
                               target: Provider.of<LocationProvider>(context, listen: false).latitude!=0.0?
                               LatLng(
-                                  Provider.of<LocationProvider>(context, listen: false).latitude
-                                  , Provider.of<LocationProvider>(context, listen: false).longitude):
+                                  Provider.of<LocationProvider>(context, listen: false).latitude,
+                                  Provider.of<LocationProvider>(context, listen: false).longitude):
                               LatLng(
-                                  Provider.of<LocationProvider>(context, listen: false).currentLatitude
-                                  , Provider.of<LocationProvider>(context, listen: false).currentLongitude),
+                                  Provider.of<LocationProvider>(context, listen: false).currentLatitude,
+                                  Provider.of<LocationProvider>(context, listen: false).currentLongitude),
                               zoom: 15,
                             )),
                           );
+                          print('camera animate');
 
                           if(Provider.of<LocationProvider>(context, listen: false).latitude!=0.0){
-                            _addMarker1(LatLng(
+                            locationProvider.addMarker(LatLng(
                                 Provider.of<LocationProvider>(context, listen: false).latitude,
                                 Provider.of<LocationProvider>(context, listen: false).longitude));
                           }
-                        }));;
+                        });
                       },
                       child: Center(
                           child: Container(
@@ -213,30 +240,34 @@ class _SelectLocationState extends State<SelectLocation> {
                               child: CustomButton(
                                 btnTxt: 'Sign Up',
                                 onTap: () async{
-                                  print('signup model ///');
-                                  print(jsonEncode(widget.signUpModel));
-                                  SignUpModel signUpModel = SignUpModel(
-                                      fullName: widget.signUpModel!.fullName,
-                                      workshopName: widget.signUpModel!.workshopName,
-                                      businessName: widget.signUpModel!.businessName,
-                                      taxId: widget.signUpModel!.taxId,
-                                      phone: widget.signUpModel!.phone,
-                                      email: widget.signUpModel!.email,
-                                      coverage: widget.signUpModel!.coverage,
-                                      password: widget.signUpModel!.password,
-                                      latitude: Provider.of<LocationProvider>(context, listen: false).latitude.toString(),
-                                      longitude: Provider.of<LocationProvider>(context, listen: false).longitude.toString(),
-                                      address: Provider.of<LocationProvider>(context, listen: false).addressName.toString());
+                                  if(Provider.of<LocationProvider>(context, listen: false).currentLatitude == 0.0){
+                                    showCustomSnackBar(
+                                        'Please add your location!',
+                                        context);
+                                  }else{
 
-                                  authProvider
-                                      .registration(signUpModel,widget.bgCheck)
-                                      .then((status) async {
-                                    if (status.isSuccess) {
-                                      Provider.of<ProfileProvider>(context, listen: false).getUserInfo(context, _callbackUserInfo);
-                                      Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=>
-                                          DashboardScreen(pageIndex: 0)));
-                                    }
-                                  });
+                                    SignUpModel signUpModel = SignUpModel(
+                                        fullName: Provider.of<AuthProvider>(context, listen: false).signUpModel!.fullName,
+                                        workshopName: Provider.of<AuthProvider>(context, listen: false).signUpModel!.workshopName,
+                                        phone: Provider.of<AuthProvider>(context, listen: false).signUpModel!.phone,
+                                        email: Provider.of<AuthProvider>(context, listen: false).signUpModel!.email,
+                                        password: Provider.of<AuthProvider>(context, listen: false).signUpModel!.password,
+                                        latitude: locationProvider.latitude.toString(),
+                                        longitude: locationProvider.longitude.toString(),
+                                        address: locationProvider.addressName.toString());
+
+                                    authProvider
+                                        .registration(signUpModel)
+                                        .then((status) async {
+                                      if (status.isSuccess) {
+                                        Provider.of<ProfileProvider>(context, listen: false).getUserInfo(context, _callbackUserInfo);
+                                        Provider.of<ServicesProvider>(context, listen: false).getCategories(context);
+                                        Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=>
+                                            SelectCategoriesScreen(fromMenu: false)));
+                                      }
+
+                                    });
+                                  }
                                 },
                               ),
                             ),
@@ -251,16 +282,14 @@ class _SelectLocationState extends State<SelectLocation> {
               backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
               onPressed: () => _googleMapController!.animateCamera(
-                _info != null
-                    ? CameraUpdate.newLatLngBounds(_info!.bounds, 100.0)
-                    : CameraUpdate.newCameraPosition( CameraPosition(
+                CameraUpdate.newCameraPosition( CameraPosition(
                   target: Provider.of<LocationProvider>(context, listen: false).latitude!=0.0?
                   LatLng(
-                      Provider.of<LocationProvider>(context, listen: false).latitude
-                      , Provider.of<LocationProvider>(context, listen: false).longitude):
+                      Provider.of<LocationProvider>(context, listen: false).latitude,
+                      Provider.of<LocationProvider>(context, listen: false).longitude):
                   LatLng(
-                      Provider.of<LocationProvider>(context, listen: false).currentLatitude
-                      , Provider.of<LocationProvider>(context, listen: false).currentLongitude),
+                      Provider.of<LocationProvider>(context, listen: false).currentLatitude,
+                      Provider.of<LocationProvider>(context, listen: false).currentLongitude),
                   zoom: 15,
                 )),
               ),
@@ -270,25 +299,25 @@ class _SelectLocationState extends State<SelectLocation> {
         });
   }
 
-  void _addMarker1(LatLng pos) async {
-
-    if (_origin == null || (_origin != null )) {
-      setState(() async{
-        _origin = Marker(
-          markerId: const MarkerId('origin'),
-          infoWindow: const InfoWindow(title: 'My Location'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          position: pos,
-        );
-        // Reset destination
-        // _destination = null;
-
-        // Reset info
-        _info = null;
-      });
-    }
-
-  }
+  // void _addMarker1(LatLng pos) async {
+  //
+  //   if (_origin == null || (_origin != null )) {
+  //     setState(() async{
+  //       _origin = Marker(
+  //         markerId: const MarkerId('origin'),
+  //         infoWindow: const InfoWindow(title: 'My Location'),
+  //         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+  //         position: pos,
+  //       );
+  //       // Reset destination
+  //       // _destination = null;
+  //
+  //       // Reset info
+  //       _info = null;
+  //     });
+  //   }
+  //
+  // }
   void _callbackUserInfo(
       bool isSuccess) async {
     if(isSuccess){

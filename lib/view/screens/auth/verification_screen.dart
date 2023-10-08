@@ -84,7 +84,8 @@ class VerificationScreen extends StatelessWidget {
                           child: Text(
                             'I didnt receive the code',
                             style: TextStyle(
-                              color: Colors.grey
+                              color: Colors.grey,
+                              fontSize: 15
                             )
                           )),
                       Center(
@@ -112,15 +113,21 @@ class VerificationScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 48),
-                      authProvider.isEnableVerificationCode ? Padding(
+                      authProvider.isEnableVerificationCode ?
+
+                      Padding(
                         padding: const EdgeInsets.symmetric(horizontal: Dimensions.PADDING_SIZE_LARGE),
-                        child: CustomButton(
+                        child:
+                        authProvider.verifyEmailLoading?
+                        Center(child: CircularProgressIndicator(valueColor:
+                        AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor))):
+                        CustomButton(
                           btnTxt: 'Verify',
                           onTap: () {
 
                             if(fromSignUp) {
 
-                              Provider.of<AuthProvider>(context, listen: false).verifyEmail(emailAddress).then((value) {
+                              authProvider.verifyEmail(emailAddress).then((value) {
                                 if(value.isSuccess) {
                                   Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> CreateAccountScreen(email: emailAddress)));
                                 } else {
@@ -128,7 +135,7 @@ class VerificationScreen extends StatelessWidget {
                                 }
                               });
                             }else {
-                              Provider.of<AuthProvider>(context, listen: false).verifyToken(emailAddress).then((value) {
+                              authProvider.verifyToken(emailAddress).then((value) {
                                 if(value.isSuccess) {
                                   Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> CreateNewPasswordScreen(email: emailAddress, resetToken: authProvider.verificationCode)));
                                 //  Navigator.pushNamed(context, Routes.getNewPassRoute(emailAddress, authProvider.verificationCode));

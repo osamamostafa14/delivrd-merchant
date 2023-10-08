@@ -38,6 +38,10 @@ class AppConstants {
   /// Appointments
   static const String DAY_APPOINTMENTS_URI = '/api/v1/driver/appointments/day-appointments';
 
+  // CATEGORIES
+  static const String CATEGORIES_URI = '/api/v1/categories';
+  static const String DRIVER_CATEGORIES_URI = '/api/v1/driver/categories';
+  static const String SAVE_SERVICES_URI = '/api/v1/driver/save-services';
 
   // internal
   static const String TOKEN = 'token';

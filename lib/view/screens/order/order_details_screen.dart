@@ -15,7 +15,8 @@ import 'package:provider/provider.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final Order? order;
-  OrderDetailsScreen({@required this.order});
+  final bool? fromAccepted;
+  OrderDetailsScreen({@required this.order, @required this.fromAccepted});
 
   @override
   State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
@@ -53,29 +54,29 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             DateTime? _appointmentDate;
             String? _dateText;
             bool appointmentExpired = false;
-           if(widget.order!.appointment != null){
+            if(widget.order!.appointment != null){
               _appointmentDate = DateTime.parse(widget.order!.appointment!.appointmentDate!);
-             final now = DateTime.now();
-             final today = DateTime(now.year, now.month, now.day);
-             final tomorrow = DateTime(now.year, now.month, now.day + 1);
+              final now = DateTime.now();
+              final today = DateTime(now.year, now.month, now.day);
+              final tomorrow = DateTime(now.year, now.month, now.day + 1);
 
-             if(_appointmentDate == today) {
-               _dateText = 'Today';
-             } else if(_appointmentDate == tomorrow) {
-               _dateText = 'Tomorrow';
-             }else {
-               _dateText = DateConverter.isoStringToLocalDateOnly(_appointmentDate);
-             }
+              if(_appointmentDate == today) {
+                _dateText = 'Today';
+              } else if(_appointmentDate == tomorrow) {
+                _dateText = 'Tomorrow';
+              }else {
+                _dateText = DateConverter.isoStringToLocalDateOnly(_appointmentDate);
+              }
 
-             final past = DateTime(now.year, now.month, now.day, now.hour, now.minute - 1);
-             //   final yesterday = DateTime(now.year, now.month, now.day - 1);
+              final past = DateTime(now.year, now.month, now.day, now.hour, now.minute - 1);
+              //   final yesterday = DateTime(now.year, now.month, now.day - 1);
 
-             if(widget.order!.appointment != null){
-               if(_appointmentDate.isBefore(past)){
-                 appointmentExpired = true;
-               }
-             }
-           }
+              if(widget.order!.appointment != null){
+                if(_appointmentDate.isBefore(past)){
+                  appointmentExpired = true;
+                }
+              }
+            }
 
 
             return SafeArea(
@@ -85,152 +86,174 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   physics: BouncingScrollPhysics(),
                   child: Center(
                     child: SizedBox(
-                      width: 1170,
-                      child: Column(
-                        children: [
-                          widget.order!.appointment != null?
-                          Row(
-                            children: [
-                             const Expanded(child: Text('Appointment date:', style: TextStyle(color: Colors.black54))),
-                              Expanded(child: Row(
-                                children: [
-                                  Text('${DateConverter.convertTimeToTime(_appointmentDate!)}',
-                                      style: const TextStyle(
-                                          color: Colors.black87,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13
-                                      )),
-                                  const SizedBox(width: 10),
-                                  Text(_dateText!,
-                                      style: const TextStyle(
-                                          color: Colors.black87,
-                                          fontWeight: FontWeight.normal,
-                                        fontStyle: FontStyle.italic,
-                                        fontSize: 12
-                                      )),
-                                ],
-                              )),
-                            ],
-                          ) :  SizedBox(),
-                          const SizedBox(height: 10),
-                          widget.order!.appointment != null?
-                          appointmentExpired ?
-                          Text('Expired', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic)) :
-                          BorderButton(
-                            width: 350,
-                            btnTxt: 'Check your calendar',
-                            textColor: Colors.red,
-                            borderColor: Colors.red,
-                            onTap: ()async{
-                              DateTime _now = DateTime.now();
-                              Provider.of<AppointmentProvider>(context, listen: false).setDayAndMonth(_now.weekday,_now.day, _now.month, _now.year);
-                              String token = Provider.of<AuthProvider>(context, listen: false).getUserToken();
-                              Provider.of<AppointmentProvider>(context, listen: false).getDayAppointments(
+                        width: 1170,
+                        child: Column(
+                          children: [
+                            widget.order!.appointment != null?
+                            Row(
+                              children: [
+                                const Expanded(child: Text('Appointment date:', style: TextStyle(color: Colors.black54))),
+                                Expanded(child: Row(
+                                  children: [
+                                    Text('${DateConverter.convertTimeToTime(_appointmentDate!)}',
+                                        style: const TextStyle(
+                                            color: Colors.black87,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13
+                                        )),
+                                    const SizedBox(width: 10),
+                                    Text(_dateText!,
+                                        style: const TextStyle(
+                                            color: Colors.black87,
+                                            fontWeight: FontWeight.normal,
+                                            fontStyle: FontStyle.italic,
+                                            fontSize: 12
+                                        )),
+                                  ],
+                                )),
+                              ],
+                            ) :  SizedBox(),
+                            const SizedBox(height: 10),
+                            if(widget.fromAccepted!)
+                              BorderButton(
+                                width: 350,
+                                btnTxt: 'Check your calendar',
+                                textColor: Colors.red,
+                                borderColor: Colors.red,
+                                onTap: ()async{
+                                  DateTime _now = DateTime.now();
+                                  Provider.of<AppointmentProvider>(context, listen: false).setDayAndMonth(_now.weekday,_now.day, _now.month, _now.year);
+                                  String token = Provider.of<AuthProvider>(context, listen: false).getUserToken();
+                                  Provider.of<AppointmentProvider>(context, listen: false).getDayAppointments(
+                                      context,
+                                      DateTime.now(),
+                                      token
+                                  );
+                                  Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> CalendarScreen()));
+                                },
+                              )else
+
+                              widget.order!.appointment != null?
+
+                              appointmentExpired ?
+                              Text('Expired', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic)) :
+
+
+                              BorderButton(
+                                width: 350,
+                                btnTxt: 'Check your calendar',
+                                textColor: Colors.red,
+                                borderColor: Colors.red,
+                                onTap: ()async{
+                                  DateTime _now = DateTime.now();
+                                  Provider.of<AppointmentProvider>(context, listen: false).setDayAndMonth(_now.weekday,_now.day, _now.month, _now.year);
+                                  String token = Provider.of<AuthProvider>(context, listen: false).getUserToken();
+                                  Provider.of<AppointmentProvider>(context, listen: false).getDayAppointments(
+                                      context,
+                                      DateTime.now(),
+                                      token
+                                  );
+                                  Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> CalendarScreen()));
+                                },
+                              ) : SizedBox(),
+
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              child: Divider(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(child: Text('Service Name:', style: TextStyle(color: Colors.black54))),
+                                Expanded(child: Text('${widget.order!.serviceName}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
+                              ],
+                            ),
+
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              child: Divider(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(child: Text('Administrative area:', style: TextStyle(color: Colors.black54))),
+                                Expanded(child: Text('${_location['adminisrative_area']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              child: Divider(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(child: Text('Locality:', style: TextStyle(color: Colors.black54))),
+                                Expanded(child: Text('${_location['locality']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
+                              ],
+                            ),
+
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              child: Divider(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            _vehicleInfo['model_name'] != 0?
+                            Row(
+                              children: [
+                                Expanded(child: Text('Model Name', style: TextStyle(color: Colors.black54))),
+                                Expanded(child: Text('${_vehicleInfo['model_name']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
+                              ],
+                            ) : SizedBox(),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              child: Divider(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            _vehicleInfo['model_name'] != 0?
+                            Row(
+                              children: [
+                                Expanded(child: Text('Model Year', style: TextStyle(color: Colors.black54))),
+                                Expanded(child: Text('${_vehicleInfo['model_year']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
+                              ],
+                            ) : SizedBox(),
+
+                            SizedBox(height: 40),
+                            widget.order!.tireImage == null? SizedBox() :
+                            Center(
+                              child: Text('Tire Image', style: TextStyle(color: Colors.black54)),
+                            ),
+                            SizedBox(height: 10),
+                            widget.order!.tireImage == null? SizedBox() :
+                            GestureDetector(onTap: () {
+                              String url =
+                                  '${Provider.of<SplashProvider>(context, listen: false).baseUrls!.orderImageUrl}/${widget.order!.tireImage}';
+                              Navigator.push(
                                   context,
-                                  DateTime.now(),
-                                  token
-                              );
-                              Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> CalendarScreen()));
+                                  MaterialPageRoute(
+                                      builder: (context) => ImagePreview(imageURL: url)));
                             },
-                          ): SizedBox(),
-
-                          Padding(
-                            padding: const EdgeInsets.only(top: 5, bottom: 5),
-                            child: Divider(
-                              color: Colors.grey,
-                            ),
-                          ),
-                         Row(
-                           children: [
-                             Expanded(child: Text('Service Name:', style: TextStyle(color: Colors.black54))),
-                             Expanded(child: Text('${widget.order!.serviceName}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
-                           ],
-                         ),
-
-                          Padding(
-                            padding: const EdgeInsets.only(top: 5, bottom: 5),
-                            child: Divider(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Expanded(child: Text('Administrative area:', style: TextStyle(color: Colors.black54))),
-                              Expanded(child: Text('${_location['adminisrative_area']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 5, bottom: 5),
-                            child: Divider(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Expanded(child: Text('Locality:', style: TextStyle(color: Colors.black54))),
-                              Expanded(child: Text('${_location['locality']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
-                            ],
-                          ),
-
-                          Padding(
-                            padding: const EdgeInsets.only(top: 5, bottom: 5),
-                            child: Divider(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          _vehicleInfo['model_name'] != 0?
-                          Row(
-                            children: [
-                              Expanded(child: Text('Model Name', style: TextStyle(color: Colors.black54))),
-                              Expanded(child: Text('${_vehicleInfo['model_name']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
-                            ],
-                          ) : SizedBox(),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 5, bottom: 5),
-                            child: Divider(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          _vehicleInfo['model_name'] != 0?
-                          Row(
-                            children: [
-                              Expanded(child: Text('Model Year', style: TextStyle(color: Colors.black54))),
-                              Expanded(child: Text('${_vehicleInfo['model_year']}', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold))),
-                            ],
-                          ) : SizedBox(),
-
-                          SizedBox(height: 40),
-                          widget.order!.tireImage == null? SizedBox() :
-                          Center(
-                            child: Text('Tire Image', style: TextStyle(color: Colors.black54)),
-                          ),
-                          SizedBox(height: 10),
-                          widget.order!.tireImage == null? SizedBox() :
-                          GestureDetector(onTap: () {
-                            String url =
-                                '${Provider.of<SplashProvider>(context, listen: false).baseUrls!.orderImageUrl}/${widget.order!.tireImage}';
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ImagePreview(imageURL: url)));
-                          }, 
-                          child: Stack(children: [
-                            FadeInImage.assetNetwork(
-                              placeholder: Images.placeholder,
-                              image:
-                              '${Provider.of<SplashProvider>(context, listen: false).baseUrls!.orderImageUrl}/${widget.order!.tireImage}',
-                              width: 200,
-                              height: 200,
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                                bottom: 10,
-                                right: 0,
-                            child: Icon(Icons.open_with_rounded, color: Colors.white),
-                            )
-                          ],)),
-                        ],
-                      )
+                                child: Stack(children: [
+                                  FadeInImage.assetNetwork(
+                                    placeholder: Images.placeholder,
+                                    image:
+                                    '${Provider.of<SplashProvider>(context, listen: false).baseUrls!.orderImageUrl}/${widget.order!.tireImage}',
+                                    width: 200,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Positioned(
+                                    bottom: 10,
+                                    right: 0,
+                                    child: Icon(Icons.open_with_rounded, color: Colors.white),
+                                  )
+                                ])),
+                          ],
+                        )
                     ),
                   ),
                 ),

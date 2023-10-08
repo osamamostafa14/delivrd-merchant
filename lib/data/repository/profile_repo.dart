@@ -31,22 +31,18 @@ class ProfileRepo {
 
   Future<http.StreamedResponse> updateProfile(
       SignUpModel? signUpModel,
-      File? bgCheck,
       String token,
-      bool isAseChecked,
-      bool isBgChecked,
       ) async {
 
-    print('signUpModel 3 /////');
     print(jsonEncode(signUpModel));
     http.MultipartRequest request = http.MultipartRequest('POST', Uri.parse('${AppConstants.BASE_URL}${AppConstants.UPDATE_PROFILE_URI}'));
     // request.headers.addAll(<String,String>{'Authorization': 'Bearer ${token}'});
 
-    if(bgCheck != null) {
-      print('id image /////');
-      print('----------------${bgCheck!.readAsBytes().asStream()}/${bgCheck.lengthSync()}/${bgCheck.path.split('/').last}');
-      request.files.add(http.MultipartFile('bg_check_image', new http.ByteStream(DelegatingStream.typed(bgCheck.openRead())), bgCheck.lengthSync(), filename: bgCheck.path.split('/').last));
-    }
+    // if(bgCheck != null) {
+    //   print('id image /////');
+    //   print('----------------${bgCheck!.readAsBytes().asStream()}/${bgCheck.lengthSync()}/${bgCheck.path.split('/').last}');
+    //   request.files.add(http.MultipartFile('bg_check_image', new http.ByteStream(DelegatingStream.typed(bgCheck.openRead())), bgCheck.lengthSync(), filename: bgCheck.path.split('/').last));
+    // }
 
     Map<String, String> _fields = Map();
     {
@@ -55,11 +51,8 @@ class ProfileRepo {
         'token': token,
         'full_name': signUpModel!.fullName,
         'workshop_name': signUpModel!.workshopName,
-        'business_name': signUpModel!.businessName,
-        'tax_id': signUpModel!.taxId,
         'phone': signUpModel!.phone,
         'password': signUpModel!.password,
-        'coverage': signUpModel!.coverage.toString(),
       });
     }
     request.fields.addAll(_fields);

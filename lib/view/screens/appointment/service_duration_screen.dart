@@ -7,10 +7,12 @@ import 'package:delivrd_driver/provider/profile_provider.dart';
 import 'package:delivrd_driver/utill/dimensions.dart';
 import 'package:delivrd_driver/view/base/custom_button.dart';
 import 'package:delivrd_driver/view/screens/appointment/widget/time_intervals.dart';
+import 'package:delivrd_driver/view/screens/dashboard_screen.dart';
 import 'package:delivrd_driver/view/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 
 class ServiceDurationScreen extends StatefulWidget {
 
@@ -185,37 +187,37 @@ class _ServiceDurationScreenState extends State<ServiceDurationScreen> {
                     ),
                   ),
                 ),
-               const Divider(),
-               Expanded(child: Column(
-                 children: [
-                   Row(
-                     mainAxisAlignment: MainAxisAlignment.center,
-                     children: [
-                       Icon(Icons.watch_later_outlined,
-                           color: Colors.black87, size: 25),
-                       const SizedBox(width: 10),
-                       SizedBox(
-                         width: MediaQuery.of(context).size.width * 0.8,
-                         child: Text('Approximately how long will this service take to be completed?:',
-                             style: TextStyle(color:Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
-                       ),
-                     ],
-                   ),
-                   Padding(
-                     padding: const EdgeInsets.only(left: 50),
-                     child: TextField (
-                       controller: _durationController,
-                       keyboardType: TextInputType.number,
-                       decoration: InputDecoration(
-                           border: InputBorder.none,
-                           labelText: 'Duration (In minutes)',
-                           hintText: 'Duration (In minutes)'
-                       ),
-                     ),
-                   ),
+                const Divider(),
+                Expanded(child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.watch_later_outlined,
+                            color: Colors.black87, size: 25),
+                        const SizedBox(width: 10),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          child: Text('Approximately how long will this service take to be completed?:',
+                              style: TextStyle(color:Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 50),
+                      child: TextField (
+                        controller: _durationController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                            border: InputBorder.none,
+                            labelText: 'Duration (In minutes)',
+                            hintText: 'Duration (In minutes)'
+                        ),
+                      ),
+                    ),
 
-                 ],
-               )),
+                  ],
+                )),
 
                 Consumer<HomeProvider>(
                     builder: (context, homeProvider, child) {
@@ -223,33 +225,33 @@ class _ServiceDurationScreenState extends State<ServiceDurationScreen> {
                         homeProvider.acceptIsLoading?
                         Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor))) :
                         Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: CustomButton(
-                          btnTxt: 'Confirm',
-                          onTap: () async {
-                            FocusScope.of(context).unfocus();
-                            if(_durationController.text.trim().isNotEmpty){
-                              int _serviceDuration = int.parse(_durationController.text);
-                              DateTime _appointmentDate = DateTime.parse(widget.order!.appointment!.appointmentDate!);
-                              DateTime _expectedEndTime = DateTime(
-                                _appointmentDate.year,
-                                _appointmentDate.month,
-                                _appointmentDate.day,
-                                _appointmentDate.hour,
-                                _appointmentDate.minute + _serviceDuration,
-                              );
-                              Provider.of<HomeProvider>(context, listen: false).acceptRejectOrder(
-                                  context,
-                                  widget.order!,
-                                  'accepted',
-                                  widget.order!.id.toString(),
-                                  _expectedEndTime.toString(),
-                                  _callback);
-                            }
-                            //   Navigator.pop(context);
-                          },
-                        ),
-                      );
+                          padding: const EdgeInsets.all(8.0),
+                          child: CustomButton(
+                            btnTxt: 'Confirm',
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              if(_durationController.text.trim().isNotEmpty){
+                                int _serviceDuration = int.parse(_durationController.text);
+                                DateTime _appointmentDate = DateTime.parse(widget.order!.appointment!.appointmentDate!);
+                                DateTime _expectedEndTime = DateTime(
+                                  _appointmentDate.year,
+                                  _appointmentDate.month,
+                                  _appointmentDate.day,
+                                  _appointmentDate.hour,
+                                  _appointmentDate.minute + _serviceDuration,
+                                );
+                                Provider.of<HomeProvider>(context, listen: false).acceptRejectOrder(
+                                    context,
+                                    widget.order!,
+                                    'accepted',
+                                    widget.order!.id.toString(),
+                                    _expectedEndTime.toString(),
+                                    _callback);
+                              }
+                              //   Navigator.pop(context);
+                            },
+                          ),
+                        );
                     })
               ],
             );
@@ -269,7 +271,7 @@ class _ServiceDurationScreenState extends State<ServiceDurationScreen> {
             title: Text(message),
           )
       );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context)=> HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context)=> DashboardScreen(pageIndex: 0)));
       setState(() {});
     } else {
       if(message == 'time_not_available'){

@@ -51,20 +51,14 @@ class ProfileProvider with ChangeNotifier {
 
   Future<ResponseModel> updateProfile(
       SignUpModel? signUpModel,
-      File? bgCheck,
       String token,
-      bool isAseChecked,
-      bool isBgChecked,
       ) async {
     _isLoading = true;
     notifyListeners();
     ResponseModel _responseModel;
     http.StreamedResponse response = await profileRepo!.updateProfile(
         signUpModel,
-        bgCheck,
         token,
-        isAseChecked,
-        isBgChecked
     );
     _isLoading = false;
     if (response.statusCode == 200) {

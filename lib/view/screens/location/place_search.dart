@@ -1,4 +1,3 @@
-
 import 'package:delivrd_driver/provider/auth_provider.dart';
 import 'package:delivrd_driver/provider/location_provider.dart';
 import 'package:delivrd_driver/utill/app_constants.dart';
@@ -49,7 +48,7 @@ class _PlaceSearchState extends State<PlaceSearch> {
     String baseURL =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json';
     String request =
-        '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken&components=country:eg';
+        '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken&components=country:us';
     var response = await http.get(Uri.parse(request));
     if (response.statusCode == 200) {
       setState(() {
@@ -116,13 +115,18 @@ class _PlaceSearchState extends State<PlaceSearch> {
                               SizedBox(width: 10),
                               GestureDetector(
                                   onTap: () {
+                                    try {
+                                      locationProvider.updateSearchLocation(
+                                          context,
+                                          latitude: locationProvider.currentLatitude,
+                                          longitude: locationProvider.currentLongitude,
+                                          location: '',
+                                          callback: _callback
+                                      );
+                                    }catch (e) {
+                                      print('error here ${e}');
 
-                                    locationProvider.updateSearchLocation(
-                                        latitude: locationProvider.currentLatitude,
-                                        longitude: locationProvider.currentLongitude,
-                                        location: '',
-                                        callback: _callback
-                                    );
+                                    }
 
                                     //Navigator.pop(context);
                                     // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ChooseDispatchLocation(send: widget.send, vehicles: widget.vehicles)));
@@ -152,6 +156,7 @@ class _PlaceSearchState extends State<PlaceSearch> {
                                 onTap:() async{
                                   FocusScope.of(context).unfocus();
                                   locationProvider.updateSearchLocation(
+                                      context,
                                       location:_placeList[index]["description"],
                                       latitude: 0.0,
                                       longitude: 0.0,
@@ -182,8 +187,8 @@ class _PlaceSearchState extends State<PlaceSearch> {
       bool isSuccess) async {
     if(isSuccess){
       setState(() {
-        Navigator.of(context).pop(true);
-       // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SelectLocation()));
+        // Navigator.of(context).pop(true);
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SelectLocation()));
       });
     } else {
       showDialog(
@@ -195,3 +200,4 @@ class _PlaceSearchState extends State<PlaceSearch> {
     }
   }
 }
+

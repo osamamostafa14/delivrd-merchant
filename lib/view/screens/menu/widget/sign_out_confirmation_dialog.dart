@@ -26,7 +26,7 @@ class SignOutConfirmationDialog extends StatelessWidget {
             Padding(
               padding: EdgeInsets.all(Dimensions.PADDING_SIZE_LARGE),
               child: Text('Do you want to sign out?', style: TextStyle(
-                fontSize: 12
+                fontSize: 16
               ), textAlign: TextAlign.center),
             ),
 

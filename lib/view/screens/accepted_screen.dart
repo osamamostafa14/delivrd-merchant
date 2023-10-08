@@ -505,7 +505,7 @@ class _AcceptedScreenState extends State<AcceptedScreen> {
                                                       textColor: Colors.grey,
                                                       borderColor: Colors.grey,
                                                       onTap: (){
-                                                        Navigator.push(context, MaterialPageRoute(builder: (_) => OrderDetailsScreen(order: ordersList![index])));
+                                                        Navigator.push(context, MaterialPageRoute(builder: (_) => OrderDetailsScreen(order: ordersList![index], fromAccepted: true)));
                                                       },
                                                     ),
                                                   ),

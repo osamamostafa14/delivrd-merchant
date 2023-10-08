@@ -46,7 +46,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: Text(
                             'Mechanic Sign Up',
                            style: TextStyle(
-                             fontSize: 13
+                             fontSize: 16
                            ),
                           )),
                       SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
@@ -59,7 +59,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             hintText: 'Enter Your Email'
                         ),
                       ),
+
                       SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
+
                       !authProvider.isPhoneNumberVerificationButtonLoading
                           ? CustomButton(
                         btnTxt: 'Continue',
@@ -102,14 +104,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               Text(
                                 'Already have an account',
                                 style: TextStyle(
-                                  fontSize: 10
+                                  fontSize: 14
                                 ),
                               ),
                               SizedBox(width: Dimensions.PADDING_SIZE_SMALL),
                               Text(
                                 'Login',
                                 style: TextStyle(
-                                  color: Colors.grey
+                                  color: Colors.grey,
+                                    fontSize: 14
                                 ),
                               ),
                             ],

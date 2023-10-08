@@ -6,10 +6,14 @@ import 'package:delivrd_driver/provider/home_provider.dart';
 import 'package:delivrd_driver/provider/location_provider.dart';
 import 'package:delivrd_driver/provider/profile_provider.dart';
 import 'package:delivrd_driver/provider/splash_provider.dart';
+import 'package:delivrd_driver/view/base/custom_snack_bar.dart';
 import 'package:delivrd_driver/view/screens/auth/login_screen.dart';
 import 'package:delivrd_driver/view/screens/dashboard_screen.dart';
+import 'package:delivrd_driver/view/screens/location/select_location.dart';
+import 'package:delivrd_driver/view/screens/location/widgets/permission_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -74,8 +78,21 @@ class _SplashScreenState extends State<SplashScreen> {
     Provider.of<SplashProvider>(context, listen: false).initConfig(_globalKey).then((bool isSuccess) {
       if (isSuccess) {
         Timer(Duration(seconds: 2), () async {
-          if (Provider.of<AuthProvider>(context, listen: false).isLoggedIn()) {
+
+          LocationPermission permission = await Geolocator.checkPermission();
+          if(permission == LocationPermission.denied) {
+            permission = await Geolocator.requestPermission();
+          }
+          if(permission == LocationPermission.denied) {
+            showCustomSnackBar('You have to allow location permission to get our services', context);
+          }else if(permission == LocationPermission.deniedForever) {
+            showDialog(context: context, barrierDismissible: false, builder: (context) => PermissionDialog());
+          }else {
             Provider.of<LocationProvider>(context, listen: false).getCurrentLocation();
+          }
+
+          if (Provider.of<AuthProvider>(context, listen: false).isLoggedIn()) {
+
             if(Provider.of<AuthProvider>(context, listen: false).getUserToken()!=''){
               String token = Provider.of<AuthProvider>(context, listen: false).getUserToken();
               print('token -- ${token}');
@@ -92,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Provider.of<ProfileProvider>(context, listen: false).getUserInfo(context, _callback);
 
           } else {
-            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> LoginScreen()));
+          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=> LoginScreen()));
           }
         }
         );
