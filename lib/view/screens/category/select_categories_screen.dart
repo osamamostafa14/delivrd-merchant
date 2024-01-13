@@ -27,11 +27,7 @@ class _SelectCategoriesScreenState extends State<SelectCategoriesScreen> {
         centerTitle: true,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0.2,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios),
-        //   color: Colors.red,
-        //   onPressed: () =>  Navigator.pop(context),
-        // ),
+        leading: const SizedBox(),
       ),
       body: Consumer<ServicesProvider>(
         builder: (context, servicesProvider, child) => SafeArea(

@@ -218,7 +218,8 @@ class _SelectLocationState extends State<SelectLocation> {
 
                 Consumer<AuthProvider>(
                     builder: (context, authProvider, child) {
-                      return authProvider.isLoading?
+                      return
+                        authProvider.isLoading?
                       CircularProgressIndicator(
                           valueColor:
                           AlwaysStoppedAnimation<Color>(Colors.redAccent)) :
@@ -245,7 +246,6 @@ class _SelectLocationState extends State<SelectLocation> {
                                         'Please add your location!',
                                         context);
                                   }else{
-
                                     SignUpModel signUpModel = SignUpModel(
                                         fullName: Provider.of<AuthProvider>(context, listen: false).signUpModel!.fullName,
                                         workshopName: Provider.of<AuthProvider>(context, listen: false).signUpModel!.workshopName,
@@ -254,7 +254,9 @@ class _SelectLocationState extends State<SelectLocation> {
                                         password: Provider.of<AuthProvider>(context, listen: false).signUpModel!.password,
                                         latitude: locationProvider.latitude.toString(),
                                         longitude: locationProvider.longitude.toString(),
-                                        address: locationProvider.addressName.toString());
+                                        address: locationProvider.addressName.toString(),
+                                      referralSource: Provider.of<AuthProvider>(context, listen: false).signUpModel!.referralSource
+                                    );
 
                                     authProvider
                                         .registration(signUpModel)
@@ -265,7 +267,6 @@ class _SelectLocationState extends State<SelectLocation> {
                                         Navigator.push(context, MaterialPageRoute(builder: (BuildContext context)=>
                                             SelectCategoriesScreen(fromMenu: false)));
                                       }
-
                                     });
                                   }
                                 },

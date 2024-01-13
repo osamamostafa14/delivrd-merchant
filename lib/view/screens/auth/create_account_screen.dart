@@ -4,6 +4,8 @@ import 'package:delivrd_driver/provider/location_provider.dart';
 import 'package:delivrd_driver/utill/dimensions.dart';
 import 'package:delivrd_driver/view/base/custom_button.dart';
 import 'package:delivrd_driver/view/base/custom_snack_bar.dart';
+import 'package:delivrd_driver/view/base/custom_text_field.dart';
+import 'package:delivrd_driver/view/base/referral_source_widget.dart';
 import 'package:delivrd_driver/view/screens/auth/login_screen.dart';
 import 'package:delivrd_driver/view/screens/location/select_location.dart';
 import 'package:delivrd_driver/view/screens/location/widgets/permission_dialog.dart';
@@ -29,6 +31,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
   TextEditingController();
+
+  final TextEditingController _referralSourceController = TextEditingController();
 
   String countryCode = "";
   String? accountPhoneNumber;
@@ -98,7 +102,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       TextField (
                         controller: _phoneController,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                             border: InputBorder.none,
                             labelText: 'Phone number',
                             hintText: 'Enter Your phone number'
@@ -111,35 +115,133 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         obscureText: true,
                         enableSuggestions: false,
                         autocorrect: false,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                             border: InputBorder.none,
                             labelText: 'Password',
                             hintText: 'Enter Your password'
                         ),
                       ),
 
-                      SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
+                      const SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
                       // for confirm password section
                       TextField (
                         controller: _confirmPasswordController,
                         obscureText: true,
                         enableSuggestions: false,
                         autocorrect: false,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                             border: InputBorder.none,
                             labelText: 'Confirm Password',
                             hintText: 'Confirm Your password'
                         ),
                       ),
-                      Divider(
+                      const Divider(
                         color: Colors.grey,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 15),
+
+                      InkWell(
+                        onTap: () {
+                          showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title:  Text('How do you hear about us?', style: TextStyle(
+                                    color: Colors.black54,
+                                    fontSize: 15
+                                )),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ReferralSourceWidget(text: 'Facebook'),
+
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 10, bottom: 10),
+                                      child: Divider(),
+                                    ),
+
+                                    ReferralSourceWidget(text: 'Google'),
+
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 10, bottom: 10),
+                                      child: Divider(),
+                                    ),
+
+                                    ReferralSourceWidget(text: 'Twitter'),
+
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 10, bottom: 10),
+                                      child: Divider(),
+                                    ),
+
+                                    ReferralSourceWidget(text: 'Linkedin'),
+
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 10, bottom: 10),
+                                      child: Divider(),
+                                    ),
+
+                                    ReferralSourceWidget(text: 'Other'),
+
+                                  ],
+                                ),
+                              )
+                          );
+                        },
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(width: 1, color: Colors.black12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                Text(authProvider.referralSource!=null?
+                                    '${authProvider.referralSource}':
+                                'How do you hear about us?', style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 15
+                                )),
+
+                                const Spacer(),
+
+                                const Icon(Icons.arrow_drop_down, size: 20),
+
+                                const SizedBox(width: 30)
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+                      authProvider.referralSource == null?
+                          const SizedBox():
+                      authProvider.referralSource!.toLowerCase() == 'other'?
+                      CustomTextField(
+                        hintText: 'Write your referral source here',
+                        isShowBorder: true,
+                        inputType: TextInputType.text,
+                        inputAction: TextInputAction.next,
+                        controller: _referralSourceController,
+                      ): const SizedBox(),
+
+                      const SizedBox(height: 30),
 
                       !authProvider.isLoading
                           ? CustomButton(
                         btnTxt: 'Next',
                         onTap: () async {
+
+                          String? _referralSource;
+                          if(authProvider.referralSource!=null){
+                            if(authProvider.referralSource!.toLowerCase() == 'other'){
+                              _referralSource = _referralSourceController.text.trim();
+                            }else{
+                              _referralSource =  authProvider.referralSource!;
+                            }
+                          }
 
                           String _fullName =
                           _fullNameController.text.trim();
@@ -173,7 +275,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                 'Enter your workshop name',
                                 context);
                           }
-
                           else if (_password.isEmpty) {
                             showCustomSnackBar(
                                 'Enter your password',
@@ -190,7 +291,19 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             showCustomSnackBar(
                                 'Password didn\'t match',
                                 context);
-                          } else {
+                          }else if (authProvider.referralSource == null) {
+                          showCustomSnackBar(
+                              'Please add referral source',
+                              context);
+                        }else if (authProvider.referralSource!.toLowerCase() == 'other' && _referralSourceController.text.trim().isEmpty) {
+                          showCustomSnackBar(
+                              'Please add referral source',
+                              context);
+                        }else if (authProvider.referralSource!.toLowerCase() != 'other' && authProvider.referralSource == null) {
+                          showCustomSnackBar(
+                              'Please add referral source',
+                              context);
+                        } else {
                             SignUpModel signUpModel = SignUpModel(
                                 fullName: _fullName,
                                 workshopName: _workshopName,
@@ -199,7 +312,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                 phone: _phone,
                                 address: '',
                                 longitude: '',
-                                latitude: ''
+                                latitude: '',
+                              referralSource: _referralSource
                             );
 
                             LocationPermission permission = await Geolocator.checkPermission();
@@ -230,7 +344,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       )
                           : Center(
                           child: CircularProgressIndicator(
-                            valueColor: new AlwaysStoppedAnimation<Color>(
+                            valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).primaryColor),
                           )),
 
@@ -238,8 +352,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       SizedBox(height: 11),
                       InkWell(
                         onTap: () {
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => LoginScreen()));
-
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) =>
+                              LoginScreen()));
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),

@@ -47,6 +47,14 @@ class AuthProvider extends ChangeNotifier {
   SignUpModel? _signUpModel;
   SignUpModel? get signUpModel => _signUpModel;
 
+  String? _referralSource;
+  String? get referralSource => _referralSource;
+
+  void setReferralSource(String value) {
+    _referralSource = value;
+    notifyListeners();
+  }
+
   void setSignUpModel(SignUpModel model) {
     _signUpModel = model;
     notifyListeners();

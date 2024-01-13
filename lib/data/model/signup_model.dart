@@ -20,6 +20,7 @@ class SignUpModel {
   // String? birthday;
   // String? securityNumber;
   // String? zipCode;
+  String? referralSource;
 
   SignUpModel({
     required this.fullName,
@@ -30,6 +31,7 @@ class SignUpModel {
     required this.latitude,
     required this.longitude,
     required this.address,
+     this.referralSource,
      this.walletBalance,
     this.totalEarnings,
     this.status,
@@ -92,7 +94,7 @@ class SignUpModel {
     data['work_start_time'] = this.workStartTime;
     data['work_end_time'] = this.workEndTime;
     data['days_off'] = this.daysOff;
-
+    data['referral_source'] = this.referralSource;
     return data;
   }
 }

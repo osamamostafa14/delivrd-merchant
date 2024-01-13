@@ -74,6 +74,7 @@ class AuthRepo {
         'latitude': signUpModel.latitude,
         'longitude': signUpModel.longitude,
         'address': signUpModel.address,
+        'referral_source': signUpModel.referralSource!,
       });
     }
     request.fields.addAll(_fields);
